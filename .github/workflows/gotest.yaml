@@ -1,0 +1,46 @@
+name: Go Test
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.go'
+      - '**.mod'
+      - '**.sum'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**.go'
+      - '**.mod'
+      - '**.sum'
+
+jobs:
+  go-fmt:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.24
+      - name: gofmt
+        run: |
+          OUTPUT=$(gofmt -l -s .)
+          if [ -n "$OUTPUT" ]; then
+            echo "The following files are not formatted correctly:"
+            echo "$OUTPUT"
+            exit 1
+          fi
+
+  go-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v ./...
