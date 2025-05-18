@@ -6,6 +6,8 @@
 
 Xplr allows you explore tree-based file formats as an interactive TUI tree. This currently supports JSON, YAML, and TOML files.
 
+<img alt="example" src="./assets/example.gif" width="600px" /></p>
+
 ## How do I install it?
 
 ```
