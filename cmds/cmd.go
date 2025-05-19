@@ -20,9 +20,12 @@ func New() *cobra.Command {
 	var layers uint
 	var file string
 	cmd := &cobra.Command{
-		Use:   "xplr",
-		Short: "Explore a tree data file with a TUI graphical interface",
-		Args:  cobra.MaximumNArgs(1),
+		Use:     "xplr",
+		Version: "0.1.0",
+		Short:   "Explore a tree data file with a TUI graphical interface",
+		Long:    "Takes in a tree data file (JSON, YAML, TOML) either via flag parameter, first argument, or stdin and produces TUI navigable tree to view and explore the data",
+		Example: "xplr -x 2 -f foo.json",
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			// get config
 			c, err := config.NewConfig()
