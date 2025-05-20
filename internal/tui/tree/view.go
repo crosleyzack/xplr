@@ -30,8 +30,10 @@ func (m *Model) View() string {
 		availableHeight -= 50
 	}
 
-	count := 0 // This is used to keep track of the index of the node we are on
-	treeContent := m.renderTree(m.Nodes, 0, &count)
+	treeContent, err := m.renderTree()
+	if err != nil {
+		return fmt.Sprintf("An error occurred: %v", err)
+	}
 	treeStyle := lipgloss.NewStyle().Height(availableHeight)
 
 	sections = append(sections, treeStyle.Render(treeContent), help)
@@ -44,20 +46,20 @@ func (m *Model) helpView() string {
 }
 
 // renderTree renders the json tree in the component
-func (m *Model) renderTree(remainingNodes []*nodes.Node, indent int, count *int) string {
+func (m *Model) renderTree() (string, error) {
 	var b strings.Builder
+	count := 0
 	minRow, maxRow := m.getDisplayRange(m.NumberOfNodes())
-	for _, node := range remainingNodes {
+	f := func(node *nodes.Node, layer int) error {
 		var str string
 		// If we aren't at the root, we add the arrow shape to the string
-		if indent > 0 {
-			shape := strings.Repeat(" ", (indent-1)*2) + m.Styles.Shapes.Render(bottomLeft) + " "
+		if layer > 0 {
+			shape := strings.Repeat(" ", (layer-1)*2) + m.Styles.Shapes.Render(bottomLeft) + " "
 			str += shape
 		}
 		// Generate the correct index for the node
-		idx := *count
-		*count++
-		// Format the string with fixed width for the value and description fields
+		idx := count
+		count++
 		keyWidth := 10
 		valueWidth := 20
 		keyStr := strings.ReplaceAll(fmt.Sprintf("%-*s", keyWidth, node.Key), "\n", " ")
@@ -72,12 +74,12 @@ func (m *Model) renderTree(remainingNodes []*nodes.Node, indent int, count *int)
 			// nothing to do here
 		}
 		b.WriteString(str)
-		if node.Children != nil && node.Expand {
-			childStr := m.renderTree(node.Children, indent+1, count)
-			b.WriteString(childStr)
-		}
+		return nil
 	}
-	return b.String()
+	if err := nodes.DFS(m.Nodes, f, 0); err != nil {
+		return "", fmt.Errorf("Failed to render tree: %w", err)
+	}
+	return b.String(), nil
 }
 
 // getDisplayRange returns the range of rows that should be displayed

@@ -138,3 +138,18 @@ func spacerToken(first bool) string {
 	}
 	return " "
 }
+
+// DFS perform depth first search on tree and run f on nodes
+func DFS(nodes []*Node, f func(*Node, int) error, layer int) error {
+	for _, node := range nodes {
+		if err := f(node, layer); err != nil {
+			return err
+		}
+		if node.Children != nil && node.Expand {
+			if err := DFS(node.Children, f, layer+1); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
