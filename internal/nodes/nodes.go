@@ -19,6 +19,8 @@ type Node struct {
 	Value string
 	// Children is the list of children nodes
 	Children []*Node
+	// Parent of this node
+	Parent *Node
 	// Expand indicates if the node is expanded
 	Expand bool
 }
@@ -121,11 +123,15 @@ func makeNode(key string, value any, layer uint, displayLayers uint) *Node {
 		node.Children = make([]*Node, 0, len(value.([]any)))
 		for i, child := range value.([]any) {
 			childNode := makeNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers)
+			childNode.Parent = node
 			node.Children = append(node.Children, childNode)
 		}
 		node.Value = node.ShortString()
 	case map[string]any:
 		node.Children = makeTree(value.(map[string]any), layer+1, displayLayers)
+		for _, n := range node.Children {
+			n.Parent = node
+		}
 		node.Value = node.ShortString()
 	}
 	return node

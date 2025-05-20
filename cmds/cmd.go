@@ -6,13 +6,12 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/x/term"
 	"github.com/crosleyzack/xplr/internal/config"
 	"github.com/crosleyzack/xplr/internal/format"
 	"github.com/crosleyzack/xplr/internal/keys"
 	"github.com/crosleyzack/xplr/internal/nodes"
 	"github.com/crosleyzack/xplr/internal/styles"
-	"github.com/crosleyzack/xplr/internal/tui/tree"
+	"github.com/crosleyzack/xplr/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -70,17 +69,14 @@ func New() *cobra.Command {
 			// parse configs
 			keyMap := keys.NewKeyMap(&c.KeyConfig)
 			style := styles.NewStyle(&c.StyleConfig)
-			w, h, err := term.GetSize(os.Stdout.Fd())
 			if err != nil {
 				return fmt.Errorf("failed to get terminal size: %w", err)
 			}
-			// display
-			p := tea.NewProgram(tree.New(&tree.TreeConfig{
-				Width:  w,
-				Height: h,
-				Style:  style,
-				Keys:   keyMap,
-			}, n))
+			model, err := tui.New(keyMap, style, n)
+			if err != nil {
+				return fmt.Errorf("failed to create TUI model: %w", err)
+			}
+			p := tea.NewProgram(model)
 			if _, err := p.Run(); err != nil {
 				return err
 			}

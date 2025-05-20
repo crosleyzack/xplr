@@ -2,6 +2,7 @@ package tree
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -14,11 +15,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return nil, nil
 	}
 	switch msg := msg.(type) {
-	case tea.QuitMsg:
-		return m, tea.Batch(tea.ClearScreen, tea.Quit)
-	case tea.WindowSizeMsg:
-		m.width = msg.Width
-		m.height = msg.Height
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.KeyMap.Bottom):
@@ -35,10 +31,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ExpandCollapseAll(m.currentNode, false)
 		case key.Matches(msg, m.KeyMap.ExpandAll):
 			m.ExpandCollapseAll(m.currentNode, true)
-		case key.Matches(msg, m.KeyMap.Help):
-			m.Help.ShowAll = !m.Help.ShowAll
-		case key.Matches(msg, m.KeyMap.Quit):
-			return m, tea.Batch(tea.Quit, tea.ClearScreen)
+		case key.Matches(msg, m.KeyMap.Next):
+			m.NextMatchingNode()
 		}
 	}
 	return m, nil
@@ -83,5 +77,40 @@ func (m *Model) ExpandCollapseAll(n *nodes.Node, expand bool) {
 	)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to expand-collapse all: %v", err))
+	}
+}
+
+// GetMatchingNodes find nodes which match request
+func (m *Model) GetMatchingNodes(searchTerm string) error {
+	f := func(node *nodes.Node, layer int) error {
+		if len(node.Children) == 0 && strings.Contains(node.Value, searchTerm) {
+			m.searchResults = append(m.searchResults, node)
+		}
+		return nil
+	}
+	err := nodes.DFS(m.Nodes, f, &nodes.SearchConfig{SearchAll: true})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// NextMatchingNode sets the current node to the next matching node
+func (m *Model) NextMatchingNode() {
+	if len(m.searchResults) > 0 {
+		m.currentNode, m.searchResults = m.searchResults[0], m.searchResults[1:]
+		// set all parents of this node to be expanded
+		for n := m.currentNode; n != nil; n = n.Parent {
+			n.Expand = true
+		}
+		// get cursor position of current node
+		count := 0
+		nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
+			if node.Equal(m.currentNode) {
+				m.cursor = count
+			}
+			count++
+			return nil
+		}, nil)
 	}
 }
