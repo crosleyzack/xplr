@@ -7,13 +7,15 @@ import (
 )
 
 type KeyConfig struct {
-	BottomKeys   []string
-	TopKeys      []string
-	DownKeys     []string
-	UpKeys       []string
-	CollapseKeys []string
-	HelpKeys     []string
-	QuitKeys     []string
+	BottomKeys         []string
+	TopKeys            []string
+	DownKeys           []string
+	UpKeys             []string
+	CollapseToggleKeys []string
+	CollapseAllKeys    []string
+	ExpandAllKeys      []string
+	HelpKeys           []string
+	QuitKeys           []string
 }
 
 func NewConfig(data []byte) (*KeyConfig, error) {

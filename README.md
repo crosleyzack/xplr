@@ -56,11 +56,13 @@ SelectedBackgroundColor = "#fffffc"
 UnselectedForegroundColor = "#fffffd"
 HelpColor = "#fffffe"
 # keys
-BottomKeys = ["bottom"]
-TopKeys = ["top"]
+BottomKeys = ["bottom", "G"]
+TopKeys = ["top", "g"]
 DownKeys = ["down","j"]
 UpKeys = ["up","k"]
-CollapseKeys = ["tab","enter"]
+CollapseToggle = ["tab", "h", "l"]
+CollapseAll = ["<", "H"]
+ExpandAll = [">", "L"]
 HelpKeys = ["?"]
 QuitKeys = ["esc","q"]
 ```

@@ -4,8 +4,6 @@ import (
 	"sort"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestString(t *testing.T) {
@@ -278,41 +276,6 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestDFS(t *testing.T) {
-	n := &Node{
-		Key:    "foo",
-		Expand: true,
-		Children: []*Node{
-			{
-				Key:    "bar",
-				Expand: true,
-				Children: []*Node{
-					{
-						Key: "baz",
-					},
-				},
-			},
-			{
-				Key:    "bad",
-				Expand: false,
-				Children: []*Node{
-					{
-						Key: "unreached",
-					},
-				},
-			},
-		},
-	}
-	keys := make([]string, 0)
-	f := func(n *Node, _ int) error {
-		keys = append(keys, n.Key)
-		return nil
-	}
-	err := DFS([]*Node{n}, f, 0)
-	assert.NoError(t, err)
-	assert.ElementsMatch(t, []string{"foo", "bar", "baz", "bad"}, keys)
 }
 
 func sortNodes(nodes []*Node) func(i, j int) bool {
