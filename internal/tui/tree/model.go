@@ -72,7 +72,8 @@ func (m *Model) ShortHelp() []key.Binding {
 	kb := []key.Binding{
 		m.KeyMap.Up,
 		m.KeyMap.Down,
-		m.KeyMap.Collapse,
+		m.KeyMap.CollapseToggle,
+		m.KeyMap.CollapseAll,
 	}
 	if m.AdditionalShortHelpKeys != nil {
 		kb = append(kb, m.AdditionalShortHelpKeys()...)
@@ -83,19 +84,18 @@ func (m *Model) ShortHelp() []key.Binding {
 }
 
 func (m *Model) FullHelp() [][]key.Binding {
-	kb := [][]key.Binding{{
+	return [][]key.Binding{{
 		m.KeyMap.Up,
 		m.KeyMap.Down,
-		m.KeyMap.Collapse,
+		m.KeyMap.CollapseToggle,
+		m.KeyMap.CollapseAll,
+		m.KeyMap.ExpandAll,
+		m.KeyMap.Quit,
+		m.KeyMap.Help,
 	}}
-	return append(kb,
-		[]key.Binding{
-			m.KeyMap.Quit,
-			m.KeyMap.Help,
-		})
 }
 
-// Initialize the dashboard
+// Init Initialize the dashboard
 func (m *Model) Init() tea.Cmd {
 	return tea.ClearScreen
 }

@@ -76,7 +76,7 @@ func (m *Model) renderTree() (string, error) {
 		b.WriteString(str)
 		return nil
 	}
-	if err := nodes.DFS(m.Nodes, f, 0); err != nil {
+	if err := nodes.DFS(m.Nodes, f, nil); err != nil {
 		return "", fmt.Errorf("Failed to render tree: %w", err)
 	}
 	return b.String(), nil
