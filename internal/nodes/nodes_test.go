@@ -4,6 +4,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestString(t *testing.T) {
@@ -197,9 +199,7 @@ func TestMakeNode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			node := makeNode(tt.key, tt.value, 0, 2)
 			sort.Slice(node.Children, sortNodes(node.Children))
-			if !node.Equal(&tt.expected) {
-				t.Errorf("makeNode() = %v, want %v", node.String(), tt.expected)
-			}
+			assert.True(t, compareNodes(node, &tt.expected))
 		})
 	}
 }
@@ -270,7 +270,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 			for i, node := range result {
-				if !node.Equal(tt.expected[i]) {
+				if !compareNodes(node, tt.expected[i]) {
 					t.Errorf("New()[%d] = %v, want %v", i, node, tt.expected[i])
 				}
 			}
@@ -280,4 +280,24 @@ func TestNew(t *testing.T) {
 
 func sortNodes(nodes []*Node) func(i, j int) bool {
 	return func(i, j int) bool { return nodes[i].Key < nodes[j].Key }
+}
+
+// compareNodes compares two nodes for equality, including their children.
+// ignores keys
+func compareNodes(a, b *Node) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	if a.Key != b.Key || a.Value != b.Value || a.Expand != b.Expand {
+		return false
+	}
+	if len(a.Children) != len(b.Children) {
+		return false
+	}
+	for i := range a.Children {
+		if !compareNodes(a.Children[i], b.Children[i]) {
+			return false
+		}
+	}
+	return true
 }

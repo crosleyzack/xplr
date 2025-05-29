@@ -37,6 +37,7 @@ func (m *Model) View() string {
 	}
 
 	treeStyle := lipgloss.NewStyle().Height(availableHeight).Width(m.width)
+	m.TreeView.Height = availableHeight
 	tree := treeStyle.Render(m.TreeView.View())
 
 	sections = append([]string{tree}, sections...)

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -13,6 +15,7 @@ const (
 
 // Node is a node in the tree
 type Node struct {
+	ID uuid.UUID
 	// Key is the value of the node in the tree
 	Key string
 	// Value is used to store the string representation of the value
@@ -27,24 +30,7 @@ type Node struct {
 
 // Equal returns true if the two nodes are equal
 func (n *Node) Equal(other *Node) bool {
-	if n.Key != other.Key {
-		return false
-	}
-	if n.Value != other.Value {
-		return false
-	}
-	if n.Expand != other.Expand {
-		return false
-	}
-	if len(n.Children) != len(other.Children) {
-		return false
-	}
-	for i, child := range n.Children {
-		if !child.Equal(other.Children[i]) {
-			return false
-		}
-	}
-	return true
+	return n.ID == other.ID
 }
 
 // String returns a string representation of the node
@@ -107,6 +93,7 @@ func makeTree(json map[string]any, layer uint, displayLayers uint) []*Node {
 // makeNode creates a new node from a key and value
 func makeNode(key string, value any, layer uint, displayLayers uint) *Node {
 	node := &Node{
+		ID:     uuid.New(),
 		Key:    key,
 		Expand: layer < displayLayers,
 	}
