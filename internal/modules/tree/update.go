@@ -1,6 +1,7 @@
 package tree
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -98,7 +99,7 @@ func (m *Model) GetMatchingNodes(searchTerm string) error {
 // NextMatchingNode sets the current node to the next matching node
 func (m *Model) NextMatchingNode() {
 	if len(m.searchResults) > 0 {
-		m.currentNode, m.searchResults = m.searchResults[0], m.searchResults[1:]
+		m.currentNode, m.searchResults = m.searchResults[0], append(m.searchResults[1:], m.searchResults[0])
 		// set all parents of this node to be expanded
 		for n := m.currentNode; n != nil; n = n.Parent {
 			n.Expand = true
@@ -108,6 +109,7 @@ func (m *Model) NextMatchingNode() {
 		nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
 			if node.Equal(m.currentNode) {
 				m.cursor = count
+				return errors.New("break out")
 			}
 			count++
 			return nil

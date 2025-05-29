@@ -12,7 +12,6 @@ import (
 // inspired by https://github.com/savannahostrowski/tree-bubble/blob/main/tree.go
 
 type TreeConfig struct {
-	Width  int
 	Height int
 	Style  styles.Style
 	Keys   keys.KeyMap
@@ -23,8 +22,7 @@ type Model struct {
 	KeyMap        keys.KeyMap
 	Styles        styles.Style
 	Nodes         []*nodes.Node
-	width         int
-	height        int
+	Height        int
 	cursor        int
 	searchResults []*nodes.Node
 	currentNode   *nodes.Node
@@ -32,16 +30,17 @@ type Model struct {
 
 var _ tea.Model = &Model{}
 
+// New creates a new Model for the tree
 func New(conf *TreeConfig, nodes []*nodes.Node) *Model {
 	return &Model{
 		KeyMap: conf.Keys,
 		Styles: conf.Style,
 		Nodes:  nodes,
-		width:  conf.Width,
-		height: conf.Height,
+		Height: conf.Height,
 	}
 }
 
+// NumberOfNodes returns the number of nodes in the tree
 func (m *Model) NumberOfNodes() int {
 	count := 0
 	err := nodes.DFS(m.Nodes, func(node *nodes.Node, _ int) error {

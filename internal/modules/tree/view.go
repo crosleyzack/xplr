@@ -11,6 +11,7 @@ const (
 	bottomLeft string = " └─"
 )
 
+// View returns the string representation of the tree
 func (m *Model) View() string {
 	if m == nil || m.Nodes == nil {
 		return "no data"
@@ -61,15 +62,15 @@ func (m *Model) renderTree() (string, error) {
 
 // getDisplayRange returns the range of rows that should be displayed
 func (m *Model) getDisplayRange(maxRows int) (int, int) {
-	rowsAbove := m.height / 2
-	rowsBelow := m.height / 2
+	rowsAbove := m.Height / 2
+	rowsBelow := m.Height / 2
 	if m.cursor < rowsAbove {
 		rowsAbove = m.cursor
-		rowsBelow = m.height - m.cursor
+		rowsBelow = m.Height - m.cursor
 	}
 	if m.cursor+rowsBelow > maxRows {
 		rowsBelow = maxRows - m.cursor
-		rowsAbove = m.height - rowsBelow
+		rowsAbove = m.Height - rowsBelow
 	}
 	return m.cursor - rowsAbove, m.cursor + rowsBelow
 }
