@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
@@ -16,33 +15,11 @@ func (m *Model) View() string {
 	if m == nil || m.Nodes == nil {
 		return "no data"
 	}
-
-	availableHeight := m.height
-	if availableHeight <= 0 {
-		availableHeight = 80 // Default height if not set
-	}
-
-	var sections []string
-
-	var help string
-	if m.showHelp {
-		help = m.helpView()
-		availableHeight -= 50
-	}
-
 	treeContent, err := m.renderTree()
 	if err != nil {
 		return fmt.Sprintf("An error occurred: %v", err)
 	}
-	treeStyle := lipgloss.NewStyle().Height(availableHeight)
-
-	sections = append(sections, treeStyle.Render(treeContent), help)
-
-	return lipgloss.JoinVertical(lipgloss.Left, sections...)
-}
-
-func (m *Model) helpView() string {
-	return m.Styles.Help.Render(m.Help.View(m))
+	return treeContent
 }
 
 // renderTree renders the json tree in the component
