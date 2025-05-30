@@ -62,15 +62,20 @@ func (m *Model) renderTree() (string, error) {
 
 // getDisplayRange returns the range of rows that should be displayed
 func (m *Model) getDisplayRange(maxRows int) (int, int) {
-	rowsAbove := m.Height / 2
-	rowsBelow := m.Height / 2
+	// ensure we show at most maxRows/m.Height rows
+	rowsDisplayed := min(m.Height, maxRows)
+	// rowsAbove + rowsBelow + 1 should be equal to rowsDisplayed
+	rowsAbove := rowsDisplayed / 2
+	rowsBelow := rowsDisplayed / 2
 	if m.cursor < rowsAbove {
+		// If there aren't enough rows above the cursor, we adjust the rows below
 		rowsAbove = m.cursor
-		rowsBelow = m.Height - m.cursor
+		rowsBelow = rowsDisplayed - m.cursor - 1
 	}
 	if m.cursor+rowsBelow > maxRows {
+		// If there aren't enough rows below the cursor, we adjust the rows above
 		rowsBelow = maxRows - m.cursor
-		rowsAbove = m.Height - rowsBelow
+		rowsAbove = rowsDisplayed - rowsBelow
 	}
 	return m.cursor - rowsAbove, m.cursor + rowsBelow
 }
