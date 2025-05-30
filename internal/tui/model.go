@@ -38,6 +38,7 @@ func New(keymap keys.KeyMap, style styles.Style, nodes []*nodes.Node) (*Model, e
 	}
 	treeView := tree.New(&tree.TreeConfig{
 		Height: h,
+		Width:  w,
 		Style:  style,
 		Keys:   keymap,
 	}, nodes)

@@ -36,9 +36,8 @@ func (m *Model) View() string {
 		availableHeight -= 1
 	}
 
-	treeStyle := lipgloss.NewStyle().Height(availableHeight).Width(m.width)
-	m.TreeView.Height = availableHeight
-	tree := treeStyle.Render(m.TreeView.View())
+	m.TreeView.Height = availableHeight - 1 // add a line of padding
+	tree := m.TreeView.View()
 
 	sections = append([]string{tree}, sections...)
 	return lipgloss.JoinVertical(lipgloss.Left, sections...)

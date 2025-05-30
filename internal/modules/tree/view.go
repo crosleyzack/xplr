@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
@@ -38,10 +39,8 @@ func (m *Model) renderTree() (string, error) {
 		// Generate the correct index for the node
 		idx := count
 		count++
-		keyWidth := 10
-		valueWidth := 20
-		keyStr := strings.ReplaceAll(fmt.Sprintf("%-*s", keyWidth, node.Key), "\n", " ")
-		valueStr := strings.ReplaceAll(fmt.Sprintf("%-*s", valueWidth, node.Value), "\n", " ")
+		keyStr := replaceAll(node.Key, "\n\r", " ")
+		valueStr := replaceAll(node.Value, "\n\r", " ")
 		// If we are at the cursor, we add the selected style to the string
 		if m.cursor == idx {
 			m.currentNode = node
@@ -49,7 +48,8 @@ func (m *Model) renderTree() (string, error) {
 		} else if idx >= minRow && idx <= maxRow {
 			str += fmt.Sprintf("%s\t\t%s\n", m.Styles.Unselected.Render(keyStr), m.Styles.Unselected.Render(valueStr))
 		} else {
-			// nothing to do here
+			// If we are not in the display range, we skip this node
+			return nil
 		}
 		b.WriteString(str)
 		return nil
@@ -57,7 +57,7 @@ func (m *Model) renderTree() (string, error) {
 	if err := nodes.DFS(m.Nodes, f, nil); err != nil {
 		return "", fmt.Errorf("Failed to render tree: %w", err)
 	}
-	return b.String(), nil
+	return lipgloss.NewStyle().Height(m.Height).Width(m.Width).Render(b.String()), nil
 }
 
 // getDisplayRange returns the range of rows that should be displayed
@@ -73,4 +73,15 @@ func (m *Model) getDisplayRange(maxRows int) (int, int) {
 		rowsAbove = m.Height - rowsBelow
 	}
 	return m.cursor - rowsAbove, m.cursor + rowsBelow
+}
+
+// replaceAll removes all occurrences of the characters in 'old' from the string 's'
+func replaceAll(s, old, new string) string {
+	if s == "" {
+		return s
+	}
+	for _, char := range old {
+		s = strings.ReplaceAll(s, string(char), new)
+	}
+	return s
 }
