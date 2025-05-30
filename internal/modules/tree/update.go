@@ -83,6 +83,7 @@ func (m *Model) ExpandCollapseAll(n *nodes.Node, expand bool) {
 
 // GetMatchingNodes find nodes which match request
 func (m *Model) GetMatchingNodes(searchTerm string) error {
+	m.searchResults = []*nodes.Node{}
 	f := func(node *nodes.Node, layer int) error {
 		if len(node.Children) == 0 && strings.Contains(node.Value, searchTerm) {
 			m.searchResults = append(m.searchResults, node)
