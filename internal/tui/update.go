@@ -29,6 +29,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.SearchView.Reset()
 			m.SearchView.Focus()
 		case key.Matches(msg, m.KeyMap.Submit):
+			if !m.SearchView.Focused() {
+				return m, nil // Do nothing if not focused
+			}
 			err := m.TreeView.GetMatchingNodes(m.SearchView.Value())
 			if err != nil {
 				panic(fmt.Sprintf("Failed to get matching nodes: %v", err))
