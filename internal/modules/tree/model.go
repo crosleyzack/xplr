@@ -12,6 +12,7 @@ import (
 // inspired by https://github.com/savannahostrowski/tree-bubble/blob/main/tree.go
 
 type TreeConfig struct {
+	Width  int
 	Height int
 	Style  styles.Style
 	Keys   keys.KeyMap
@@ -23,6 +24,7 @@ type Model struct {
 	Styles        styles.Style
 	Nodes         []*nodes.Node
 	Height        int
+	Width         int
 	cursor        int
 	searchResults []*nodes.Node
 	currentNode   *nodes.Node
@@ -37,6 +39,7 @@ func New(conf *TreeConfig, nodes []*nodes.Node) *Model {
 		Styles: conf.Style,
 		Nodes:  nodes,
 		Height: conf.Height,
+		Width:  conf.Width,
 	}
 }
 
