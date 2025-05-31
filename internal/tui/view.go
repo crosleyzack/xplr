@@ -4,10 +4,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const (
-	bottomLeft string = " └─"
-)
-
 // View renders the TUI view for the tree model
 func (m *Model) View() string {
 	if m == nil {

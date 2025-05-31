@@ -14,8 +14,6 @@ import (
 	"github.com/crosleyzack/xplr/internal/styles"
 )
 
-// inspired by https://github.com/savannahostrowski/tree-bubble/blob/main/tree.go
-
 // Model for the JSON tree
 type Model struct {
 	KeyMap     keys.KeyMap
