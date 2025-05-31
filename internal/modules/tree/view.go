@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	bottomLeft     string = "└─"
+	bottomLeft     string = "╰─"
+	expandable     string = "🯒🯑"
 	spacesPerLayer int    = 2
 )
 
@@ -35,9 +36,13 @@ func (m *Model) renderTree() (string, error) {
 		var str string
 		availableChars := m.Width
 		// If we aren't at the root, we add the arrow shape to the string
+		shape := bottomLeft
+		if len(node.Children) > 0 && !node.Expand {
+			shape = expandable
+		}
 		if layer > 0 {
 			spaces := (layer - 1) * spacesPerLayer
-			str += strings.Repeat(" ", spaces) + m.Styles.Shapes.Render(bottomLeft) + " "
+			str += strings.Repeat(" ", spaces) + m.Styles.Shapes.Render(shape) + " "
 			// we need to track runes used to print correct length lines
 			availableChars -= spaces + utf8.RuneCountInString(bottomLeft) + 1
 		}
