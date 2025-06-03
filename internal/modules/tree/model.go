@@ -12,22 +12,28 @@ import (
 // inspired by https://github.com/savannahostrowski/tree-bubble/blob/main/tree.go
 
 type TreeConfig struct {
-	Width  int
-	Height int
-	Style  styles.Style
-	Keys   keys.KeyMap
+	Width          int
+	Height         int
+	ExpandShape    string
+	LeafShape      string
+	SpacesPerLayer int
+	Style          styles.Style
+	Keys           keys.KeyMap
 }
 
 // Model for the JSON tree
 type Model struct {
-	KeyMap        keys.KeyMap
-	Styles        styles.Style
-	Nodes         []*nodes.Node
-	Height        int
-	Width         int
-	cursor        int
-	searchResults []*nodes.Node
-	currentNode   *nodes.Node
+	KeyMap         keys.KeyMap
+	Styles         styles.Style
+	Nodes          []*nodes.Node
+	Height         int
+	Width          int
+	ExpandShape    string
+	LeafShape      string
+	SpacesPerLayer int
+	cursor         int
+	searchResults  []*nodes.Node
+	currentNode    *nodes.Node
 }
 
 var _ tea.Model = &Model{}
@@ -35,11 +41,14 @@ var _ tea.Model = &Model{}
 // New creates a new Model for the tree
 func New(conf *TreeConfig, nodes []*nodes.Node) *Model {
 	return &Model{
-		KeyMap: conf.Keys,
-		Styles: conf.Style,
-		Nodes:  nodes,
-		Height: conf.Height,
-		Width:  conf.Width,
+		KeyMap:         conf.Keys,
+		Styles:         conf.Style,
+		Nodes:          nodes,
+		Height:         conf.Height,
+		Width:          conf.Width,
+		ExpandShape:    conf.ExpandShape,
+		LeafShape:      conf.LeafShape,
+		SpacesPerLayer: conf.SpacesPerLayer,
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Netflix/go-env"
@@ -12,7 +13,8 @@ import (
 )
 
 type configLoc struct {
-	FileLoc string `env:"XPLR_CONFIG" envDefault:"$XDG_CONFIG_HOME/xplr/config.toml"`
+	FileLoc   string `env:"XPLR_CONFIG"`
+	ConfigDir string `env:"XDG_CONFIG_HOME,default=~/.config"`
 }
 
 type Config struct {
@@ -27,14 +29,18 @@ func NewConfig() (*Config, error) {
 	if _, err := env.UnmarshalFromEnviron(&conf); err != nil {
 		return nil, fmt.Errorf("failed to read config location: %w", err)
 	}
+	path := conf.FileLoc
+	if path == "" {
+		path = filepath.Join(conf.ConfigDir, "/xplr/config.toml")
+	}
 	var c Config
-	if _, err := os.Stat(conf.FileLoc); err != nil {
+	if _, err := os.Stat(path); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return &c, nil
 		}
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
-	_, err := toml.DecodeFile(conf.FileLoc, &c)
+	_, err := toml.DecodeFile(path, &c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}

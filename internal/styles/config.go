@@ -7,6 +7,10 @@ import (
 )
 
 type StyleConfig struct {
+	ExpandShape    string
+	LeafShape      string
+	SpacesPerLayer int
+	// colors
 	ExpandShapeColor          string
 	LeafShapeColor            string
 	SelectedForegroundColor   string
