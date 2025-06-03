@@ -50,9 +50,10 @@ Configuration options include:
 
 ```toml
 # colors
-ShapeColor = "#fffffa"
+ExpandShapeColor = "#d99c63"
+LeafShapeColor = "#d19359"
 SelectedForegroundColor = "#fffffb"
-SelectedBackgroundColor = "#fffffc"
+SelectedBackgroundColor = "#7db8f2"
 UnselectedForegroundColor = "#fffffd"
 HelpColor = "#fffffe"
 # keys
