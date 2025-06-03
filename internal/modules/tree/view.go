@@ -3,13 +3,15 @@ package tree
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
 const (
-	bottomLeft string = " └─"
+	bottomLeft     string = "└─"
+	spacesPerLayer int    = 2
 )
 
 // View returns the string representation of the tree
@@ -31,16 +33,24 @@ func (m *Model) renderTree() (string, error) {
 	minRow, maxRow := m.getDisplayRange(m.NumberOfNodes())
 	f := func(node *nodes.Node, layer int) error {
 		var str string
+		availableChars := m.Width
 		// If we aren't at the root, we add the arrow shape to the string
 		if layer > 0 {
-			shape := strings.Repeat(" ", (layer-1)*2) + m.Styles.Shapes.Render(bottomLeft) + " "
-			str += shape
+			spaces := (layer - 1) * spacesPerLayer
+			str += strings.Repeat(" ", spaces) + m.Styles.Shapes.Render(bottomLeft) + " "
+			// we need to track runes used to print correct length lines
+			availableChars -= spaces + utf8.RuneCountInString(bottomLeft) + 1
 		}
 		// Generate the correct index for the node
 		idx := count
 		count++
 		keyStr := replaceAll(node.Key, "\n\r", " ")
 		valueStr := replaceAll(node.Value, "\n\r", " ")
+		availableChars -= utf8.RuneCountInString(keyStr) + 8 // +8 from two tabs
+		if utf8.RuneCountInString(valueStr) > availableChars {
+			// if we have more runes than terminal width, truncate
+			valueStr = valueStr[:availableChars-4] + "..."
+		}
 		// If we are at the cursor, we add the selected style to the string
 		if m.cursor == idx {
 			m.currentNode = node
