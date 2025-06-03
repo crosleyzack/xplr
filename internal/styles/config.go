@@ -7,7 +7,8 @@ import (
 )
 
 type StyleConfig struct {
-	ShapeColor                string
+	ExpandShapeColor          string
+	LeafShapeColor            string
 	SelectedForegroundColor   string
 	SelectedBackgroundColor   string
 	UnselectedForegroundColor string

@@ -37,12 +37,14 @@ func (m *Model) renderTree() (string, error) {
 		availableChars := m.Width
 		// If we aren't at the root, we add the arrow shape to the string
 		shape := bottomLeft
+		style := m.Styles.LeafShapes
 		if len(node.Children) > 0 && !node.Expand {
 			shape = expandable
+			style = m.Styles.ExpandShapes
 		}
 		if layer > 0 {
 			spaces := (layer - 1) * spacesPerLayer
-			str += strings.Repeat(" ", spaces) + m.Styles.Shapes.Render(shape) + " "
+			str += strings.Repeat(" ", spaces) + style.Render(shape) + " "
 			// we need to track runes used to print correct length lines
 			availableChars -= spaces + utf8.RuneCountInString(bottomLeft) + 1
 		}
