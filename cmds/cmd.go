@@ -69,9 +69,6 @@ func New() *cobra.Command {
 			// parse configs
 			keyMap := keys.NewKeyMap(&c.KeyConfig)
 			style := styles.NewStyle(&c.StyleConfig)
-			if err != nil {
-				return fmt.Errorf("failed to get terminal size: %w", err)
-			}
 			model, err := tui.New(keyMap, style, n)
 			if err != nil {
 				return fmt.Errorf("failed to create TUI model: %w", err)

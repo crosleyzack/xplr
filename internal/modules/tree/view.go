@@ -9,12 +9,6 @@ import (
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
-const (
-	bottomLeft     string = "╰─"
-	expandable     string = "🯒🯑"
-	spacesPerLayer int    = 2
-)
-
 // View returns the string representation of the tree
 func (m *Model) View() string {
 	if m == nil || m.Nodes == nil {
@@ -36,17 +30,17 @@ func (m *Model) renderTree() (string, error) {
 		var str string
 		availableChars := m.Width
 		// If we aren't at the root, we add the arrow shape to the string
-		shape := bottomLeft
+		shape := m.LeafShape
 		style := m.Styles.LeafShapes
 		if len(node.Children) > 0 && !node.Expand {
-			shape = expandable
+			shape = m.ExpandShape
 			style = m.Styles.ExpandShapes
 		}
 		if layer > 0 {
-			spaces := (layer - 1) * spacesPerLayer
+			spaces := (layer - 1) * m.SpacesPerLayer
 			str += strings.Repeat(" ", spaces) + style.Render(shape) + " "
 			// we need to track runes used to print correct length lines
-			availableChars -= spaces + utf8.RuneCountInString(bottomLeft) + 1
+			availableChars -= spaces + utf8.RuneCountInString(shape) + 1
 		}
 		// Generate the correct index for the node
 		idx := count

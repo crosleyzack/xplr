@@ -36,7 +36,7 @@ func NewKeyMap(c *KeyConfig) KeyMap {
 		keys.Down.SetKeys(c.DownKeys...)
 	}
 	if len(c.UpKeys) != 0 {
-		keys.Down.SetKeys(c.UpKeys...)
+		keys.Up.SetKeys(c.UpKeys...)
 	}
 	if len(c.CollapseToggleKeys) != 0 {
 		keys.CollapseToggle.SetKeys(c.CollapseToggleKeys...)

@@ -49,11 +49,15 @@ Xplr will search for a configuration toml file at:
 Configuration options include:
 
 ```toml
+# format
+ExpandShape = "╰─"
+LeafShape = "🯒🯑"
+SpacesPerLayer = 2
 # colors
 ExpandShapeColor = "#d99c63"
 LeafShapeColor = "#d19359"
 SelectedForegroundColor = "#fffffb"
-SelectedBackgroundColor = "#7db8f2"
+SelectedBackgroundColor = "#63264A"
 UnselectedForegroundColor = "#fffffd"
 HelpColor = "#fffffe"
 # keys

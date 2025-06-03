@@ -35,10 +35,13 @@ func New(keymap keys.KeyMap, style styles.Style, nodes []*nodes.Node) (*Model, e
 		return nil, err
 	}
 	treeView := tree.New(&tree.TreeConfig{
-		Height: h,
-		Width:  w,
-		Style:  style,
-		Keys:   keymap,
+		Height:         h,
+		Width:          w,
+		ExpandShape:    style.ExpandShape,
+		LeafShape:      style.LeafShape,
+		SpacesPerLayer: style.SpacesPerLayer,
+		Style:          style,
+		Keys:           keymap,
 	}, nodes)
 	helpView := help.New()
 	searchView := textinput.New()
