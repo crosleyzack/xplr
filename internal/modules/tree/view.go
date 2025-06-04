@@ -9,6 +9,10 @@ import (
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
+const (
+	spacesAfterKey = 2 // Number of spaces after the key in the tree view
+)
+
 // siblingMaxKeyWidth calculates the maximum key width among siblings
 func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
 	if node == nil {
@@ -51,46 +55,16 @@ func (m *Model) renderTree() (string, error) {
 	count := 0
 	minRow, maxRow := m.getDisplayRange(m.NumberOfNodes())
 	f := func(node *nodes.Node, layer int) error {
-		var str string
-		availableChars := m.Width
-		// If we aren't at the root, we add the arrow shape to the string
-		shape := m.LeafShape
-		style := m.Styles.LeafShapes
-		if len(node.Children) > 0 && !node.Expand {
-			shape = m.ExpandShape
-			style = m.Styles.ExpandShapes
-		}
-		if layer > 0 {
-			spaces := (layer - 1) * m.SpacesPerLayer
-			str += strings.Repeat(" ", spaces) + style.Render(shape) + " "
-			// we need to track runes used to print correct length lines
-			availableChars -= spaces + utf8.RuneCountInString(shape) + 1
-		}
 		// Generate the correct index for the node
 		idx := count
 		count++
-		keyStr := replaceAll(node.Key, "\n\r", " ")
-		valueStr := replaceAll(node.Value, "\n\r", " ")
-		keyWidth := utf8.RuneCountInString(keyStr)
-		spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + m.SpacesPerLayer - keyWidth
-
-		str += keyStr + strings.Repeat(" ", spacesNeeded)
-		availableChars -= keyWidth + spacesNeeded
-		if utf8.RuneCountInString(valueStr) > availableChars {
-			// if we have more runes than terminal width, truncate
-			valueStr = valueStr[:availableChars-4] + "..."
+		if idx < minRow || idx > maxRow {
+			return nil // Skip nodes outside the display range
 		}
-		// If we are at the cursor, we add the selected style to the string
-		if m.cursor == idx {
-			m.currentNode = node
-			str += fmt.Sprintf("%s\n", m.Styles.Selected.Render(valueStr))
-		} else if idx >= minRow && idx <= maxRow {
-			str += fmt.Sprintf("%s\n", m.Styles.Unselected.Render(valueStr))
-		} else {
-			// If we are not in the display range, we skip this node
-			return nil
+		str := m.getLine(node, layer, idx)
+		if len(str) > 0 {
+			b.WriteString(str)
 		}
-		b.WriteString(str)
 		return nil
 	}
 	if err := nodes.DFS(m.Nodes, f, nil); err != nil {
@@ -128,4 +102,47 @@ func replaceAll(s, old, new string) string {
 		s = strings.ReplaceAll(s, string(char), new)
 	}
 	return s
+}
+
+// getLineShapeStyle returns the shape and style for a node based on its state
+func (m *Model) getLineShapeStyle(node *nodes.Node) (string, lipgloss.Style) {
+	if len(node.Children) == 0 {
+		return m.LeafShape, m.Styles.LeafStyle
+	} else if node.Expand {
+		return m.ExpandedShape, m.Styles.ExpandedStyle
+	} else {
+		return m.ExpandableShape, m.Styles.ExpandableStyle
+	}
+}
+
+// getLine generates a line for the tree corresponding to this node
+func (m *Model) getLine(node *nodes.Node, layer int, index int) string {
+	var str string
+	availableChars := m.Width
+	shape, style := m.getLineShapeStyle(node)
+	if layer > 0 {
+		spaces := (layer - 1) * m.SpacesPerLayer
+		str += strings.Repeat(" ", spaces) + style.Render(shape) + " "
+		// we need to track runes used to print correct length lines
+		availableChars -= spaces + utf8.RuneCountInString(shape) + 1
+	}
+	// Generate the correct index for the node
+	keyStr := replaceAll(node.Key, "\n\r", " ")
+	valueStr := replaceAll(node.Value, "\n\r", " ")
+	keyWidth := utf8.RuneCountInString(keyStr)
+	spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + spacesAfterKey - keyWidth
+
+	availableChars -= keyWidth + spacesNeeded
+	if utf8.RuneCountInString(valueStr) > availableChars {
+		// if we have more runes than terminal width, truncate
+		valueStr = valueStr[:availableChars-4] + "..."
+	}
+	// If we are at the cursor, we add the selected style to the string
+	if m.cursor == index {
+		m.currentNode = node
+		str += fmt.Sprintf("%s%s%s\n", m.Styles.Selected.Render(keyStr), strings.Repeat(" ", spacesNeeded), m.Styles.Selected.Render(valueStr))
+	} else {
+		str += fmt.Sprintf("%s%s%s\n", m.Styles.Unselected.Render(keyStr), strings.Repeat(" ", spacesNeeded), m.Styles.Unselected.Render(valueStr))
+	}
+	return str
 }

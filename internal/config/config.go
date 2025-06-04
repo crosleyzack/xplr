@@ -9,6 +9,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/Netflix/go-env"
 	"github.com/crosleyzack/xplr/internal/keys"
+	"github.com/crosleyzack/xplr/internal/modules/tree"
 	"github.com/crosleyzack/xplr/internal/styles"
 )
 
@@ -20,6 +21,7 @@ type configLoc struct {
 type Config struct {
 	styles.StyleConfig
 	keys.KeyConfig
+	tree.TreeConfig
 }
 
 // NewConfig creates a new Config object
