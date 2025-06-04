@@ -16,34 +16,24 @@ const (
 )
 
 type Style struct {
-	ExpandShape    string
-	LeafShape      string
-	SpacesPerLayer int
-	LeafShapes     lipgloss.Style
-	ExpandShapes   lipgloss.Style
-	Selected       lipgloss.Style
-	Unselected     lipgloss.Style
-	Help           lipgloss.Style
+	LeafStyle       lipgloss.Style
+	ExpandedStyle   lipgloss.Style
+	ExpandableStyle lipgloss.Style
+	Selected        lipgloss.Style
+	Unselected      lipgloss.Style
+	Help            lipgloss.Style
 }
 
 func NewStyle(c *StyleConfig) Style {
 	style := DefaultStyles()
-	if c.LeafShape != "" {
-		style.LeafShape = c.LeafShape
-	}
-	if c.ExpandShape != "" {
-		style.ExpandShape = c.ExpandShape
-	}
-	if c.SpacesPerLayer > 0 {
-		style.SpacesPerLayer = c.SpacesPerLayer
-	}
 	if c.LeafShapeColor != "" {
-		fmt.Printf("LeafShapeColor: %s\n", c.LeafShapeColor)
-		style.LeafShapes = style.LeafShapes.Foreground(lipgloss.Color(c.LeafShapeColor))
+		style.LeafStyle = style.LeafStyle.Foreground(lipgloss.Color(c.LeafShapeColor))
 	}
-	if c.ExpandShapeColor != "" {
-		fmt.Printf("ExpandShapeColor: %s\n", c.ExpandShapeColor)
-		style.ExpandShapes = style.ExpandShapes.Foreground(lipgloss.Color(c.ExpandShapeColor))
+	if c.ExpandedShapeColor != "" {
+		style.ExpandedStyle = style.ExpandedStyle.Foreground(lipgloss.Color(c.ExpandedShapeColor))
+	}
+	if c.ExpandableShapeColor != "" {
+		style.ExpandableStyle = style.ExpandableStyle.Foreground(lipgloss.Color(c.ExpandableShapeColor))
 	}
 	if c.SelectedForegroundColor != "" {
 		fmt.Printf("SelectedForegroundColor: %s\n", c.SelectedForegroundColor)
@@ -65,13 +55,11 @@ func NewStyle(c *StyleConfig) Style {
 
 func DefaultStyles() Style {
 	return Style{
-		LeafShape:      "╰─",
-		ExpandShape:    "🯒🯑",
-		SpacesPerLayer: 2,
-		LeafShapes:     lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(orange),
-		ExpandShapes:   lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(dark_orange),
-		Selected:       lipgloss.NewStyle().Margin(0, 0, 0, 0).Background(blue).Foreground(white),
-		Unselected:     lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(white).Faint(true),
-		Help:           lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"}),
+		LeafStyle:       lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(orange),
+		ExpandedStyle:   lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(orange),
+		ExpandableStyle: lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(dark_orange),
+		Selected:        lipgloss.NewStyle().Margin(0, 0, 0, 0).Background(blue).Foreground(white),
+		Unselected:      lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(white).Faint(true),
+		Help:            lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"}),
 	}
 }

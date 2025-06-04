@@ -9,6 +9,7 @@ import (
 	"github.com/crosleyzack/xplr/internal/config"
 	"github.com/crosleyzack/xplr/internal/format"
 	"github.com/crosleyzack/xplr/internal/keys"
+	"github.com/crosleyzack/xplr/internal/modules/tree"
 	"github.com/crosleyzack/xplr/internal/nodes"
 	"github.com/crosleyzack/xplr/internal/styles"
 	"github.com/crosleyzack/xplr/internal/tui"
@@ -69,7 +70,8 @@ func New() *cobra.Command {
 			// parse configs
 			keyMap := keys.NewKeyMap(&c.KeyConfig)
 			style := styles.NewStyle(&c.StyleConfig)
-			model, err := tui.New(keyMap, style, n)
+			format := tree.NewFormat(&c.TreeConfig)
+			model, err := tui.New(format, keyMap, style, n)
 			if err != nil {
 				return fmt.Errorf("failed to create TUI model: %w", err)
 			}

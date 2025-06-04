@@ -50,11 +50,13 @@ Configuration options include:
 
 ```toml
 # format
-ExpandShape = "╰─"
-LeafShape = "🯒🯑"
+ExpandedShape = "╰─"
+ExpandableShape = "🯒🯑"
+LeafShape = "└─"
 SpacesPerLayer = 2
 # colors
-ExpandShapeColor = "#d99c63"
+ExpandedShapeColor = "#d99c63"
+ExpandableShapeColor = "#d19359"
 LeafShapeColor = "#d19359"
 SelectedForegroundColor = "#fffffb"
 SelectedBackgroundColor = "#63264A"
