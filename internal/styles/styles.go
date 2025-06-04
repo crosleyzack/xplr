@@ -16,14 +16,19 @@ const (
 )
 
 type Style struct {
-	ExpandShape    string
-	LeafShape      string
-	SpacesPerLayer int
-	LeafShapes     lipgloss.Style
-	ExpandShapes   lipgloss.Style
-	Selected       lipgloss.Style
-	Unselected     lipgloss.Style
-	Help           lipgloss.Style
+	ExpandShape                string
+	LeafShape                  string
+	SpacesPerLayer             int
+	MergedObjectExpandOverride string
+	MergedObjectShowMetadata          bool
+	MergedObjectShowKeyCount          bool
+	MergedObjectShowKeyNamesWithTypes bool
+	MergedObjectMetadataPrefix        string
+	LeafShapes                        lipgloss.Style
+	ExpandShapes                      lipgloss.Style
+	Selected                          lipgloss.Style
+	Unselected                        lipgloss.Style
+	Help                              lipgloss.Style
 }
 
 func NewStyle(c *StyleConfig) Style {
@@ -37,6 +42,16 @@ func NewStyle(c *StyleConfig) Style {
 	if c.SpacesPerLayer > 0 {
 		style.SpacesPerLayer = c.SpacesPerLayer
 	}
+	if c.MergedObjectExpandOverride != "" {
+		style.MergedObjectExpandOverride = c.MergedObjectExpandOverride
+	}
+	style.MergedObjectShowMetadata = c.MergedObjectShowMetadata
+	style.MergedObjectShowKeyCount = c.MergedObjectShowKeyCount
+	style.MergedObjectShowKeyNamesWithTypes = c.MergedObjectShowKeyNamesWithTypes
+	if c.MergedObjectMetadataPrefix != "" {
+		style.MergedObjectMetadataPrefix = c.MergedObjectMetadataPrefix
+	}
+
 	if c.LeafShapeColor != "" {
 		fmt.Printf("LeafShapeColor: %s\n", c.LeafShapeColor)
 		style.LeafShapes = style.LeafShapes.Foreground(lipgloss.Color(c.LeafShapeColor))
@@ -65,13 +80,14 @@ func NewStyle(c *StyleConfig) Style {
 
 func DefaultStyles() Style {
 	return Style{
-		LeafShape:      "╰─",
-		ExpandShape:    "🯒🯑",
-		SpacesPerLayer: 2,
-		LeafShapes:     lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(orange),
-		ExpandShapes:   lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(dark_orange),
-		Selected:       lipgloss.NewStyle().Margin(0, 0, 0, 0).Background(blue).Foreground(white),
-		Unselected:     lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(white).Faint(true),
-		Help:           lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"}),
+		LeafShape:                  "╰─",
+		ExpandShape:                "🯒🯑",
+		SpacesPerLayer:             2,
+		MergedObjectMetadataPrefix: "ⓘ ",
+		LeafShapes:                 lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(orange),
+		ExpandShapes:               lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(dark_orange),
+		Selected:                   lipgloss.NewStyle().Margin(0, 0, 0, 0).Background(blue).Foreground(white),
+		Unselected:                 lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(white).Faint(true),
+		Help:                       lipgloss.NewStyle().Margin(0, 0, 0, 0).Foreground(lipgloss.AdaptiveColor{Light: "#000000", Dark: "#ffffff"}),
 	}
 }

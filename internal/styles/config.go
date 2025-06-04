@@ -7,9 +7,14 @@ import (
 )
 
 type StyleConfig struct {
-	ExpandShape    string
-	LeafShape      string
-	SpacesPerLayer int
+	ExpandShape                       string
+	LeafShape                         string
+	SpacesPerLayer                    int
+	MergedObjectExpandOverride        string
+	MergedObjectShowMetadata          bool
+	MergedObjectShowKeyCount          bool
+	MergedObjectShowKeyNamesWithTypes bool
+	MergedObjectMetadataPrefix        string
 	// colors
 	ExpandShapeColor          string
 	LeafShapeColor            string

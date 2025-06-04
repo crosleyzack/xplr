@@ -53,6 +53,12 @@ Configuration options include:
 ExpandShape = "╰─"
 LeafShape = "🯒🯑"
 SpacesPerLayer = 2
+# merged object options
+MergedObjectExpandOverride = ""              # if set, will not show the merged representation when expanded
+MergedObjectShowMetadata = true              # enable metadata display for merged objects
+MergedObjectMetadataPrefix = "ⓘ "           # to distinguish from actual values
+MergedObjectShowKeyCount = false             # show number of keys/items like "(3 keys)" or "(5 items)" for arrays
+MergedObjectShowKeyNamesWithTypes = true     # show key names with actual JSON types like "(name:string, age:integer, active:boolean)" or "(array of objects)"
 # colors
 ExpandShapeColor = "#d99c63"
 LeafShapeColor = "#d19359"
