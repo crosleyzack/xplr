@@ -65,7 +65,8 @@ func New() *cobra.Command {
 				return fmt.Errorf("no data")
 			}
 			// parse into node tree
-			n := nodes.New(m, layers)
+			// TODO make stringify function configurable
+			n := nodes.New(m, layers, nodes.LeafValuesOnly)
 			// parse configs
 			keyMap := keys.NewKeyMap(&c.KeyConfig)
 			style := styles.NewStyle(&c.StyleConfig)

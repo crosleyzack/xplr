@@ -1,16 +1,9 @@
 package nodes
 
 import (
-	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
-)
-
-const (
-	DisplayedLayers = 2
-	MaxStringLength = 150
 )
 
 // Node is a node in the tree
@@ -33,65 +26,23 @@ func (n *Node) Equal(other *Node) bool {
 	return n.ID == other.ID
 }
 
-// String returns a string representation of the node
-func (n *Node) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%s", n.Key))
-	if len(n.Children) > 0 {
-		b.WriteString(": {")
-		first := true
-		for _, child := range n.Children {
-			b.WriteString(spacerToken(first))
-			b.WriteString(child.String())
-			first = false
-		}
-		b.WriteString("}")
-	} else if n.Value != "" {
-		b.WriteString(fmt.Sprintf(": %s", n.Value))
-	}
-	s := b.String()
-	if len(s) > MaxStringLength {
-		return s[:MaxStringLength] + "..."
-	}
-	return s
-}
-
-// ShortString returns a short string representation of the node, only shows leaf nodes
-func (n *Node) ShortString() string {
-	var b strings.Builder
-	if n.Children != nil {
-		first := true
-		for _, child := range n.Children {
-			b.WriteString(spacerToken(first))
-			b.WriteString(child.ShortString())
-			first = false
-		}
-	} else {
-		b.WriteString(n.Value)
-	}
-	s := b.String()
-	if len(s) > MaxStringLength {
-		return s[:MaxStringLength] + "..."
-	}
-	return s
-}
-
 // New creates a new tree from a JSON object
-func New(json map[string]any, displayLayers uint) []*Node {
-	return makeTree(json, 0, displayLayers)
+func New(json map[string]any, displayLayers uint, repr ReprNode) []*Node {
+	return makeTree(json, 0, displayLayers, repr)
 }
 
-func makeTree(json map[string]any, layer uint, displayLayers uint) []*Node {
+// makeTree creates a tree of nodes from a JSON object
+func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode) []*Node {
 	nodes := make([]*Node, 0, len(json))
 	for k, v := range json {
-		node := makeNode(k, v, layer, displayLayers)
+		node := makeNode(k, v, layer, displayLayers, repr)
 		nodes = append(nodes, node)
 	}
 	return nodes
 }
 
 // makeNode creates a new node from a key and value
-func makeNode(key string, value any, layer uint, displayLayers uint) *Node {
+func makeNode(key string, value any, layer uint, displayLayers uint, repr ReprNode) *Node {
 	node := &Node{
 		ID:     uuid.New(),
 		Key:    key,
@@ -109,31 +60,23 @@ func makeNode(key string, value any, layer uint, displayLayers uint) *Node {
 	case []any:
 		node.Children = make([]*Node, 0, len(v))
 		for i, child := range v {
-			childNode := makeNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers)
+			childNode := makeNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers, repr)
 			childNode.Parent = node
 			node.Children = append(node.Children, childNode)
 		}
 		node.Value = "[]"
 		if len(v) > 0 {
-			node.Value = node.ShortString()
+			node.Value = repr(node)
 		}
 	case map[string]any:
-		node.Children = makeTree(v, layer+1, displayLayers)
+		node.Children = makeTree(v, layer+1, displayLayers, repr)
 		for _, n := range node.Children {
 			n.Parent = node
 		}
 		node.Value = "{}"
 		if len(v) > 0 {
-			node.Value = node.ShortString()
+			node.Value = repr(node)
 		}
 	}
 	return node
-}
-
-// spacerToken returns a space if not the first element
-func spacerToken(first bool) string {
-	if first {
-		return ""
-	}
-	return " "
 }
