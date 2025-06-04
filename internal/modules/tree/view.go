@@ -26,6 +26,26 @@ func (m *Model) renderTree() (string, error) {
 	var b strings.Builder
 	count := 0
 	minRow, maxRow := m.getDisplayRange(m.NumberOfNodes())
+
+	// First pass: calculate max key width per level
+	levelMaxWidth := make(map[int]int)
+	tempCount := 0
+	calcF := func(node *nodes.Node, layer int) error {
+		idx := tempCount
+		tempCount++
+		if idx < minRow || idx > maxRow {
+			return nil
+		}
+
+		keyStr := replaceAll(node.Key, "\n\r", " ")
+		keyWidth := utf8.RuneCountInString(keyStr)
+		if keyWidth > levelMaxWidth[layer] {
+			levelMaxWidth[layer] = keyWidth
+		}
+		return nil
+	}
+	nodes.DFS(m.Nodes, calcF, nil)
+
 	f := func(node *nodes.Node, layer int) error {
 		var str string
 		availableChars := m.Width
@@ -47,7 +67,20 @@ func (m *Model) renderTree() (string, error) {
 		count++
 		keyStr := replaceAll(node.Key, "\n\r", " ")
 		valueStr := replaceAll(node.Value, "\n\r", " ")
-		availableChars -= utf8.RuneCountInString(keyStr) + 8 // +8 from two tabs
+
+		// If node is expanded and has children, don't show the condensed value
+		if node.Expand && len(node.Children) > 0 {
+			valueStr = "↓"
+		}
+
+		// Calculate spacing needed to align values within this level
+		keyWidth := utf8.RuneCountInString(keyStr)
+		maxKeyWidthAtLevel := levelMaxWidth[layer]
+		spacesNeeded := max(maxKeyWidthAtLevel-keyWidth+4, 2)
+
+		str += keyStr + strings.Repeat(" ", spacesNeeded)
+		availableChars -= keyWidth + spacesNeeded
+
 		if utf8.RuneCountInString(valueStr) > availableChars {
 			// if we have more runes than terminal width, truncate
 			valueStr = valueStr[:availableChars-4] + "..."
@@ -55,9 +88,9 @@ func (m *Model) renderTree() (string, error) {
 		// If we are at the cursor, we add the selected style to the string
 		if m.cursor == idx {
 			m.currentNode = node
-			str += fmt.Sprintf("%s\t\t%s\n", m.Styles.Selected.Render(keyStr), m.Styles.Selected.Render(valueStr))
+			str += fmt.Sprintf("%s\n", m.Styles.Selected.Render(valueStr))
 		} else if idx >= minRow && idx <= maxRow {
-			str += fmt.Sprintf("%s\t\t%s\n", m.Styles.Unselected.Render(keyStr), m.Styles.Unselected.Render(valueStr))
+			str += fmt.Sprintf("%s\n", m.Styles.Unselected.Render(valueStr))
 		} else {
 			// If we are not in the display range, we skip this node
 			return nil
