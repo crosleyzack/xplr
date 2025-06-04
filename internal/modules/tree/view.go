@@ -9,6 +9,30 @@ import (
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
+// siblingMaxKeyWidth calculates the maximum key width among siblings
+func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
+	if node == nil {
+		return 0
+	}
+
+	var siblings []*nodes.Node
+	if node.Parent == nil {
+		// For root level nodes, siblings are all root nodes
+		siblings = rootNodes
+	} else {
+		// For other nodes, siblings are parent's children
+		siblings = node.Parent.Children
+	}
+
+	maxWidth := 0
+	for _, sibling := range siblings {
+		if keyWidth := utf8.RuneCountInString(sibling.Key); keyWidth > maxWidth {
+			maxWidth = keyWidth
+		}
+	}
+	return maxWidth
+}
+
 // View returns the string representation of the tree
 func (m *Model) View() string {
 	if m == nil || m.Nodes == nil {
@@ -47,7 +71,11 @@ func (m *Model) renderTree() (string, error) {
 		count++
 		keyStr := replaceAll(node.Key, "\n\r", " ")
 		valueStr := replaceAll(node.Value, "\n\r", " ")
-		availableChars -= utf8.RuneCountInString(keyStr) + 8 // +8 from two tabs
+		keyWidth := utf8.RuneCountInString(keyStr)
+		spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + m.SpacesPerLayer - keyWidth
+
+		str += keyStr + strings.Repeat(" ", spacesNeeded)
+		availableChars -= keyWidth + spacesNeeded
 		if utf8.RuneCountInString(valueStr) > availableChars {
 			// if we have more runes than terminal width, truncate
 			valueStr = valueStr[:availableChars-4] + "..."
@@ -55,9 +83,9 @@ func (m *Model) renderTree() (string, error) {
 		// If we are at the cursor, we add the selected style to the string
 		if m.cursor == idx {
 			m.currentNode = node
-			str += fmt.Sprintf("%s\t\t%s\n", m.Styles.Selected.Render(keyStr), m.Styles.Selected.Render(valueStr))
+			str += fmt.Sprintf("%s\n", m.Styles.Selected.Render(valueStr))
 		} else if idx >= minRow && idx <= maxRow {
-			str += fmt.Sprintf("%s\t\t%s\n", m.Styles.Unselected.Render(keyStr), m.Styles.Unselected.Render(valueStr))
+			str += fmt.Sprintf("%s\n", m.Styles.Unselected.Render(valueStr))
 		} else {
 			// If we are not in the display range, we skip this node
 			return nil
