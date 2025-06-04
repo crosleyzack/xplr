@@ -9,6 +9,31 @@ import (
 	"github.com/crosleyzack/xplr/internal/nodes"
 )
 
+// siblingMaxKeyWidth calculates the maximum key width among siblings
+func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
+	if node == nil {
+		return 0
+	}
+
+	var siblings []*nodes.Node
+	if node.Parent == nil {
+		// For root level nodes, siblings are all root nodes
+		siblings = rootNodes
+	} else {
+		// For other nodes, siblings are parent's children
+		siblings = node.Parent.Children
+	}
+
+	maxWidth := 0
+	for _, sibling := range siblings {
+		keyWidth := utf8.RuneCountInString(sibling.Key)
+		if keyWidth > maxWidth {
+			maxWidth = keyWidth
+		}
+	}
+	return maxWidth
+}
+
 // View returns the string representation of the tree
 func (m *Model) View() string {
 	if m == nil || m.Nodes == nil {
@@ -27,32 +52,13 @@ func (m *Model) renderTree() (string, error) {
 	count := 0
 	minRow, maxRow := m.getDisplayRange(m.NumberOfNodes())
 
-	// First pass: calculate max key width per level
-	levelMaxWidth := make(map[int]int)
-	tempCount := 0
-	calcF := func(node *nodes.Node, layer int) error {
-		idx := tempCount
-		tempCount++
-		if idx < minRow || idx > maxRow {
-			return nil
-		}
-
-		keyStr := replaceAll(node.Key, "\n\r", " ")
-		keyWidth := utf8.RuneCountInString(keyStr)
-		if keyWidth > levelMaxWidth[layer] {
-			levelMaxWidth[layer] = keyWidth
-		}
-		return nil
-	}
-	nodes.DFS(m.Nodes, calcF, nil)
-
 	f := func(node *nodes.Node, layer int) error {
 		var str string
 		availableChars := m.Width
 		// If we aren't at the root, we add the arrow shape to the string
 		shape := m.LeafShape
 		style := m.Styles.LeafShapes
-		if len(node.Children) > 0 && !node.Expand {
+		if len(node.Children) > 0 {
 			shape = m.ExpandShape
 			style = m.Styles.ExpandShapes
 		}
@@ -68,15 +74,15 @@ func (m *Model) renderTree() (string, error) {
 		keyStr := replaceAll(node.Key, "\n\r", " ")
 		valueStr := replaceAll(node.Value, "\n\r", " ")
 
-		// If node is expanded and has children, don't show the condensed value
-		if node.Expand && len(node.Children) > 0 {
-			valueStr = "↓"
+		// If node is expanded and has children, don't show the condensed value (only if override is set)
+		if m.Styles.MergedObjectOverride != "" && node.Expand && len(node.Children) > 0 {
+			valueStr = m.Styles.MergedObjectOverride
 		}
 
 		// Calculate spacing needed to align values within this level
 		keyWidth := utf8.RuneCountInString(keyStr)
-		maxKeyWidthAtLevel := levelMaxWidth[layer]
-		spacesNeeded := max(maxKeyWidthAtLevel-keyWidth+4, 2)
+		// At least two spaces plus difference between key width and maximum.
+		spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + m.SpacesPerLayer - keyWidth
 
 		str += keyStr + strings.Repeat(" ", spacesNeeded)
 		availableChars -= keyWidth + spacesNeeded

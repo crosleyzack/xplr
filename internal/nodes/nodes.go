@@ -97,29 +97,37 @@ func makeNode(key string, value any, layer uint, displayLayers uint) *Node {
 		Key:    key,
 		Expand: layer < displayLayers,
 	}
-	switch value.(type) {
+	switch v := value.(type) {
 	case string:
-		node.Value = value.(string)
+		node.Value = v
 	case int:
-		node.Value = strconv.FormatInt(int64(value.(int)), 10)
+		node.Value = strconv.FormatInt(int64(v), 10)
 	case float64:
-		node.Value = strconv.FormatFloat(value.(float64), 'f', -1, 64)
+		node.Value = strconv.FormatFloat(v, 'f', -1, 64)
 	case bool:
-		node.Value = strconv.FormatBool(value.(bool))
+		node.Value = strconv.FormatBool(v)
 	case []any:
-		node.Children = make([]*Node, 0, len(value.([]any)))
-		for i, child := range value.([]any) {
+		node.Children = make([]*Node, 0, len(v))
+		for i, child := range v {
 			childNode := makeNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers)
 			childNode.Parent = node
 			node.Children = append(node.Children, childNode)
 		}
-		node.Value = node.ShortString()
+		if len(v) == 0 {
+			node.Value = "[]"
+		} else {
+			node.Value = node.ShortString()
+		}
 	case map[string]any:
-		node.Children = makeTree(value.(map[string]any), layer+1, displayLayers)
+		node.Children = makeTree(v, layer+1, displayLayers)
 		for _, n := range node.Children {
 			n.Parent = node
 		}
-		node.Value = node.ShortString()
+		if len(v) == 0 {
+			node.Value = "{}"
+		} else {
+			node.Value = node.ShortString()
+		}
 	}
 	return node
 }

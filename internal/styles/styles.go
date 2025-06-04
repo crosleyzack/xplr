@@ -16,14 +16,15 @@ const (
 )
 
 type Style struct {
-	ExpandShape    string
-	LeafShape      string
-	SpacesPerLayer int
-	LeafShapes     lipgloss.Style
-	ExpandShapes   lipgloss.Style
-	Selected       lipgloss.Style
-	Unselected     lipgloss.Style
-	Help           lipgloss.Style
+	ExpandShape          string
+	LeafShape            string
+	SpacesPerLayer       int
+	MergedObjectOverride string
+	LeafShapes           lipgloss.Style
+	ExpandShapes         lipgloss.Style
+	Selected             lipgloss.Style
+	Unselected           lipgloss.Style
+	Help                 lipgloss.Style
 }
 
 func NewStyle(c *StyleConfig) Style {
@@ -36,6 +37,9 @@ func NewStyle(c *StyleConfig) Style {
 	}
 	if c.SpacesPerLayer > 0 {
 		style.SpacesPerLayer = c.SpacesPerLayer
+	}
+	if c.MergedObjectOverride != "" {
+		style.MergedObjectOverride = c.MergedObjectOverride
 	}
 	if c.LeafShapeColor != "" {
 		fmt.Printf("LeafShapeColor: %s\n", c.LeafShapeColor)

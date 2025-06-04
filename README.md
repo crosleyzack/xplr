@@ -51,8 +51,9 @@ Configuration options include:
 ```toml
 # format
 ExpandShape = "╰─"
-LeafShape = "🯒🯑"
+LeafShape = "❂"
 SpacesPerLayer = 2
+MergedObjectOverride = "" # if set, will not show a merged representation of a nested object
 # colors
 ExpandShapeColor = "#d99c63"
 LeafShapeColor = "#d19359"
