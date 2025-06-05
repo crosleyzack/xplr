@@ -38,7 +38,7 @@ func DefaultFormat() *TreeFormat {
 		Width:           80,
 		Height:          20,
 		LeafShape:       "└─",
-		ExpandableShape: "🯒🯑",
+		ExpandableShape: "❭",
 		ExpandedShape:   "╰─",
 		SpacesPerLayer:  2,
 	}

@@ -51,7 +51,7 @@ Configuration options include:
 ```toml
 # format
 ExpandedShape = "╰─"
-ExpandableShape = "🯒🯑"
+ExpandableShape = "❭"
 LeafShape = "└─"
 SpacesPerLayer = 2
 # colors
