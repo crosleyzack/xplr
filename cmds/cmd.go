@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/crosleyzack/xplr/internal/format"
@@ -84,6 +85,6 @@ func New() *cobra.Command {
 	}
 	cmd.PersistentFlags().UintVarP(&layers, "expand", "x", 0, "number of layers to expand by default")
 	cmd.PersistentFlags().StringVarP(&file, "file", "f", "", "file to read data from")
-	cmd.PersistentFlags().StringVar(&nodeValueRepr, "format", nodes.LeafValuesOnlyRepr, "Format to use to represent node value")
+	cmd.PersistentFlags().StringVar(&nodeValueRepr, "format", nodes.LeafValuesOnlyRepr, "Format to use to represent an expandable node value. Available formats: "+strings.Join(nodes.GetAvailableFormats(), "|"))
 	return cmd
 }
