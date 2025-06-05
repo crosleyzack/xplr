@@ -13,18 +13,19 @@ import (
 
 // Model for the JSON tree
 type Model struct {
-	KeyMap          keys.KeyMap
-	Styles          styles.Style
-	Nodes           []*nodes.Node
-	Height          int
-	Width           int
-	ExpandedShape   string
-	ExpandableShape string
-	LeafShape       string
-	SpacesPerLayer  int
-	cursor          int
-	searchResults   []*nodes.Node
-	currentNode     *nodes.Node
+	KeyMap                  keys.KeyMap
+	Styles                  styles.Style
+	Nodes                   []*nodes.Node
+	Height                  int
+	Width                   int
+	ExpandedShape           string
+	ExpandableShape         string
+	LeafShape               string
+	SpacesPerLayer          int
+	cursor                  int
+	searchResults           []*nodes.Node
+	currentNode             *nodes.Node
+	hideSummaryWhenExpanded bool
 }
 
 var _ tea.Model = &Model{}
@@ -32,15 +33,16 @@ var _ tea.Model = &Model{}
 // New creates a new Model for the tree
 func New(format *TreeFormat, keys keys.KeyMap, style styles.Style, nodes []*nodes.Node) *Model {
 	return &Model{
-		KeyMap:          keys,
-		Styles:          style,
-		Nodes:           nodes,
-		Height:          format.Height,
-		Width:           format.Width,
-		ExpandedShape:   format.ExpandedShape,
-		ExpandableShape: format.ExpandableShape,
-		LeafShape:       format.LeafShape,
-		SpacesPerLayer:  format.SpacesPerLayer,
+		KeyMap:                  keys,
+		Styles:                  style,
+		Nodes:                   nodes,
+		Height:                  format.Height,
+		Width:                   format.Width,
+		ExpandedShape:           format.ExpandedShape,
+		ExpandableShape:         format.ExpandableShape,
+		LeafShape:               format.LeafShape,
+		SpacesPerLayer:          format.SpacesPerLayer,
+		hideSummaryWhenExpanded: format.HideSummaryWhenExpanded,
 	}
 }
 

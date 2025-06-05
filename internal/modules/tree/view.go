@@ -138,11 +138,20 @@ func (m *Model) getLine(node *nodes.Node, layer int, index int) string {
 		valueStr = valueStr[:availableChars-4] + "..."
 	}
 	// If we are at the cursor, we add the selected style to the string
+	styledKey := ""
+	styledValue := ""
 	if m.cursor == index {
 		m.currentNode = node
-		str += fmt.Sprintf("%s%s%s\n", m.Styles.Selected.Render(keyStr), strings.Repeat(" ", spacesNeeded), m.Styles.Selected.Render(valueStr))
+		styledKey = m.Styles.Selected.Render(keyStr)
+		styledValue = m.Styles.Selected.Render(valueStr)
 	} else {
-		str += fmt.Sprintf("%s%s%s\n", m.Styles.Unselected.Render(keyStr), strings.Repeat(" ", spacesNeeded), m.Styles.Unselected.Render(valueStr))
+		styledKey = m.Styles.Unselected.Render(keyStr)
+		styledValue = m.Styles.Unselected.Render(valueStr)
 	}
+	str += styledKey
+	if !node.Expand || !m.hideSummaryWhenExpanded {
+		str += strings.Repeat(" ", spacesNeeded) + styledValue
+	}
+	str += "\n"
 	return str
 }
