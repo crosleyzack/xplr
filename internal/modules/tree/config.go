@@ -1,19 +1,21 @@
 package tree
 
 type TreeConfig struct {
-	ExpandedShape   string
-	ExpandableShape string
-	LeafShape       string
-	SpacesPerLayer  int
+	ExpandedShape           string
+	ExpandableShape         string
+	LeafShape               string
+	SpacesPerLayer          int
+	HideSummaryWhenExpanded bool
 }
 
 type TreeFormat struct {
-	Width           int
-	Height          int
-	ExpandedShape   string
-	ExpandableShape string
-	LeafShape       string
-	SpacesPerLayer  int
+	Width                   int
+	Height                  int
+	ExpandedShape           string
+	ExpandableShape         string
+	LeafShape               string
+	SpacesPerLayer          int
+	HideSummaryWhenExpanded bool
 }
 
 func NewFormat(c *TreeConfig) *TreeFormat {
@@ -30,16 +32,20 @@ func NewFormat(c *TreeConfig) *TreeFormat {
 	if c.SpacesPerLayer > 0 {
 		format.SpacesPerLayer = c.SpacesPerLayer
 	}
+	if c.HideSummaryWhenExpanded {
+		format.HideSummaryWhenExpanded = c.HideSummaryWhenExpanded
+	}
 	return format
 }
 
 func DefaultFormat() *TreeFormat {
 	return &TreeFormat{
-		Width:           80,
-		Height:          20,
-		LeafShape:       "└─",
-		ExpandableShape: "❭",
-		ExpandedShape:   "╰─",
-		SpacesPerLayer:  2,
+		Width:                   80,
+		Height:                  20,
+		LeafShape:               "└─",
+		ExpandableShape:         "❭",
+		ExpandedShape:           "╰─",
+		SpacesPerLayer:          2,
+		HideSummaryWhenExpanded: false,
 	}
 }
