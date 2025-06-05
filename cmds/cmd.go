@@ -6,7 +6,6 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/crosleyzack/xplr/internal/config"
 	"github.com/crosleyzack/xplr/internal/format"
 	"github.com/crosleyzack/xplr/internal/keys"
 	"github.com/crosleyzack/xplr/internal/modules/tree"
@@ -18,6 +17,7 @@ import (
 
 func New() *cobra.Command {
 	var layers uint
+	var nodeValueRepr string
 	var file string
 	cmd := &cobra.Command{
 		Use:     "xplr",
@@ -28,7 +28,7 @@ func New() *cobra.Command {
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			// get config
-			c, err := config.NewConfig()
+			c, err := tui.NewConfig()
 			if err != nil {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
@@ -66,8 +66,7 @@ func New() *cobra.Command {
 				return fmt.Errorf("no data")
 			}
 			// parse into node tree
-			// TODO make stringify function configurable
-			n := nodes.New(m, layers, nodes.LeafValuesOnly)
+			n := nodes.New(m, layers, nodes.GetRepr(nodeValueRepr))
 			// parse configs
 			keyMap := keys.NewKeyMap(&c.KeyConfig)
 			style := styles.NewStyle(&c.StyleConfig)
@@ -85,5 +84,6 @@ func New() *cobra.Command {
 	}
 	cmd.PersistentFlags().UintVarP(&layers, "expand", "x", 0, "number of layers to expand by default")
 	cmd.PersistentFlags().StringVarP(&file, "file", "f", "", "file to read data from")
+	cmd.PersistentFlags().StringVar(&nodeValueRepr, "format", nodes.LeafValuesOnlyRepr, "Format to use to represent node value")
 	return cmd
 }
