@@ -8,10 +8,10 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/term"
-	"github.com/crosleyzack/xplr/internal/keys"
-	"github.com/crosleyzack/xplr/internal/modules/tree"
-	"github.com/crosleyzack/xplr/internal/nodes"
-	"github.com/crosleyzack/xplr/internal/styles"
+	"github.com/crosleyzack/xplr/pkg/keys"
+	"github.com/crosleyzack/xplr/pkg/modules/tree"
+	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/crosleyzack/xplr/pkg/styles"
 )
 
 // Model for the JSON tree

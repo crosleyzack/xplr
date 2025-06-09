@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/crosleyzack/xplr/internal/nodes"
+	"github.com/crosleyzack/xplr/pkg/nodes"
 )
 
 const (

@@ -8,9 +8,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/Netflix/go-env"
-	"github.com/crosleyzack/xplr/internal/keys"
-	"github.com/crosleyzack/xplr/internal/modules/tree"
-	"github.com/crosleyzack/xplr/internal/styles"
+	"github.com/crosleyzack/xplr/pkg/keys"
+	"github.com/crosleyzack/xplr/pkg/modules/tree"
+	"github.com/crosleyzack/xplr/pkg/styles"
 )
 
 type configLoc struct {

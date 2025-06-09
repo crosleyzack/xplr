@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/crosleyzack/xplr/internal/format"
-	"github.com/crosleyzack/xplr/internal/keys"
-	"github.com/crosleyzack/xplr/internal/modules/tree"
-	"github.com/crosleyzack/xplr/internal/nodes"
-	"github.com/crosleyzack/xplr/internal/styles"
-	"github.com/crosleyzack/xplr/internal/tui"
+	"github.com/crosleyzack/xplr/pkg/format"
+	"github.com/crosleyzack/xplr/pkg/keys"
+	"github.com/crosleyzack/xplr/pkg/modules/tree"
+	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/crosleyzack/xplr/pkg/styles"
+	"github.com/crosleyzack/xplr/pkg/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -21,8 +21,8 @@ func New() *cobra.Command {
 	var nodeValueRepr string
 	var file string
 	cmd := &cobra.Command{
-		Use:     "xplr",
-		Version: "0.1.0",
+		Use:     "xplr [-x <layers>] [-f <file> | data]",
+		Version: "0.2.0",
 		Short:   "Explore a tree data file with a TUI graphical interface",
 		Long:    "Takes in a tree data file (JSON, YAML, TOML) either via flag parameter, first argument, or stdin and produces TUI navigable tree to view and explore the data",
 		Example: "xplr -x 2 -f foo.json",

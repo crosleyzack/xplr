@@ -5,7 +5,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/crosleyzack/xplr/internal/modules/tree"
+	"github.com/crosleyzack/xplr/pkg/modules/tree"
 )
 
 // Update the tree view component
