@@ -3,7 +3,7 @@ package tree
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"regexp"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -85,8 +85,10 @@ func (m *Model) ExpandCollapseAll(n *nodes.Node, expand bool) {
 func (m *Model) GetMatchingNodes(searchTerm string) error {
 	m.searchResults = []*nodes.Node{}
 	f := func(node *nodes.Node, layer int) error {
-		if len(node.Children) == 0 && strings.Contains(node.Value, searchTerm) {
-			m.searchResults = append(m.searchResults, node)
+		if len(node.Children) == 0 {
+			if out, err := regexp.Match(searchTerm, []byte(node.Value)); err == nil && out {
+				m.searchResults = append(m.searchResults, node)
+			}
 		}
 		return nil
 	}
