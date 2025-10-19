@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,6 +13,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m == nil {
 		return nil, nil
 	}
+	log := logrus.New()
 	switch msg := msg.(type) {
 	case tea.QuitMsg:
 		return m, tea.Batch(tea.ClearScreen, tea.Quit)
@@ -30,11 +31,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.SearchView.Focus()
 		case key.Matches(msg, m.KeyMap.Submit):
 			if !m.SearchView.Focused() {
-				return m, nil // Do nothing if not focused
+				// copy the path do this node
+				err := m.TreeView.CopyNodePath()
+				if err != nil {
+					log.Errorf("Failed to copy node path: %v", err)
+				}
+				return m, nil
 			}
 			err := m.TreeView.GetMatchingNodes(m.SearchView.Value())
 			if err != nil {
-				panic(fmt.Sprintf("Failed to get matching nodes: %v", err))
+				log.Errorf("Failed to get matching nodes: %v", err)
 			}
 			m.TreeView.NextMatchingNode()
 			m.SearchView.Blur()
@@ -47,7 +53,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model, _ := m.TreeView.Update(msg)
 				var ok bool
 				if m.TreeView, ok = model.(*tree.Model); !ok {
-					panic("Failed to update tree model")
+					log.Errorf("Failed to update tree model")
 				}
 			}
 		}
