@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/tiagomelo/go-clipboard/clipboard"
 )
 
 // Update the JSON component
@@ -116,4 +117,15 @@ func (m *Model) NextMatchingNode() {
 			return nil
 		}, nil)
 	}
+}
+
+// CopyNodePath find path to node and copies it to clipboard
+func (m *Model) CopyNodePath() error {
+	// TODO: if value is empty and has children, get string json
+	s := nodes.GetPathToNode(m.currentNode) + " = " + m.currentNode.Value
+	c := clipboard.New()
+	if err := c.CopyText(s); err != nil {
+		return fmt.Errorf("failed to copy %s to clipboard: %w", s, err)
+	}
+	return nil
 }
