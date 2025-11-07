@@ -29,3 +29,24 @@ func dfs(nodes []*Node, f func(*Node, int) error, conf *SearchConfig, layer int)
 	}
 	return nil
 }
+
+// DFSIter a DFS implementation as an iterator for efficient searches
+func DFSIter(nodes []*Node, f func(*Node) bool) func(func(*Node) bool) {
+	stack := nodes
+	var n *Node
+	return func(yield func(*Node) bool) {
+		for len(stack) > 0 {
+			n, stack = stack[0], stack[1:]
+			if len(n.Children) > 0 {
+				// add to front of stack
+				stack = append(n.Children, stack...)
+			}
+			// if this node matches the function, yield it
+			if f(n) {
+				if !yield(n) {
+					return
+				}
+			}
+		}
+	}
+}

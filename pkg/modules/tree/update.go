@@ -3,6 +3,7 @@ package tree
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"regexp"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -84,41 +85,72 @@ func (m *Model) ExpandCollapseAll(n *nodes.Node, expand bool) {
 
 // GetMatchingNodes find nodes which match request
 func (m *Model) GetMatchingNodes(searchTerm string) error {
-	m.searchResults = []*nodes.Node{}
-	f := func(node *nodes.Node, layer int) error {
+	// stop previous search if it exists
+	if m.searchStop != nil {
+		m.searchStop()
+	}
+	m.searchResults = make([]*nodes.Node, 0)
+	m.searchNext, m.searchStop = iter.Pull(nodes.DFSIter(m.Nodes, func(node *nodes.Node) bool {
+		// match on leaf ndes which match search term
 		if len(node.Children) == 0 {
 			if out, err := regexp.Match(searchTerm, []byte(node.Value)); err == nil && out {
-				m.searchResults = append(m.searchResults, node)
+				return true
+			}
+			if out, err := regexp.Match(searchTerm, []byte(node.Key)); err == nil && out {
+				return true
 			}
 		}
-		return nil
-	}
-	err := nodes.DFS(m.Nodes, f, &nodes.SearchConfig{SearchAll: true})
-	if err != nil {
-		return err
-	}
+		return false
+	}))
 	return nil
+}
+
+// nextNodeFromResults get next item from stored results
+func (m *Model) nextNodeFromResults() bool {
+	// rotate through built up results, if any
+	if len(m.searchResults) == 0 {
+		return false
+	}
+	m.currentNode = m.searchResults[0]
+	m.searchResults = append(m.searchResults[1:], m.searchResults[0])
+	return true
 }
 
 // NextMatchingNode sets the current node to the next matching node
 func (m *Model) NextMatchingNode() {
-	if len(m.searchResults) > 0 {
-		m.currentNode, m.searchResults = m.searchResults[0], append(m.searchResults[1:], m.searchResults[0])
-		// set all parents of this node to be expanded
-		for n := m.currentNode; n != nil; n = n.Parent {
-			n.Expand = true
-		}
-		// get cursor position of current node
-		count := 0
-		nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
-			if node.Equal(m.currentNode) {
-				m.cursor = count
-				return errors.New("break out")
+	if m.searchNext != nil {
+		node, ok := m.searchNext()
+		if ok && node != nil {
+			// set n as current node and add to results
+			m.currentNode, m.searchResults = node, append(m.searchResults, node)
+		} else {
+			// stop search and rotate through built up results
+			m.searchStop()
+			m.searchStop = nil
+			m.searchNext = nil
+			if ok := m.nextNodeFromResults(); !ok {
+				// we couldn't get another node, just do nothing
+				return
 			}
-			count++
-			return nil
-		}, nil)
+		}
+	} else if ok := m.nextNodeFromResults(); !ok {
+		// we couldn't get another node, just do nothing
+		return
 	}
+	// expand parents
+	for n := m.currentNode; n != nil; n = n.Parent {
+		n.Expand = true
+	}
+	// get cursor position of current node
+	count := 0
+	nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
+		if node.Equal(m.currentNode) {
+			m.cursor = count
+			return errors.New("break out")
+		}
+		count++
+		return nil
+	}, nil)
 }
 
 // CopyNodePath find path to node and copies it to clipboard
