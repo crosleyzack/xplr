@@ -24,6 +24,8 @@ type Model struct {
 	SpacesPerLayer          int
 	cursor                  int
 	searchResults           []*nodes.Node
+	searchNext              func() (*nodes.Node, bool)
+	searchStop              func()
 	currentNode             *nodes.Node
 	hideSummaryWhenExpanded bool
 }
@@ -43,6 +45,10 @@ func New(format *TreeFormat, keys keys.KeyMap, style styles.Style, nodes []*node
 		LeafShape:               format.LeafShape,
 		SpacesPerLayer:          format.SpacesPerLayer,
 		hideSummaryWhenExpanded: format.HideSummaryWhenExpanded,
+		searchResults:           nil,
+		searchNext:              nil,
+		searchStop:              nil,
+		currentNode:             nil,
 	}
 }
 
