@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iter"
 	"regexp"
+	"strconv"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -36,6 +37,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ExpandCollapseAll(m.currentNode, true)
 		case key.Matches(msg, m.KeyMap.Next):
 			m.NextMatchingNode()
+		case key.Matches(msg, m.KeyMap.Num):
+			if i, err := strconv.Atoi(msg.String()); err == nil {
+				m.SetLayersExpanded(i)
+			}
 		}
 	}
 	return m, nil
@@ -162,4 +167,16 @@ func (m *Model) CopyNodePath() error {
 		return fmt.Errorf("failed to copy %s to clipboard: %w", s, err)
 	}
 	return nil
+}
+
+// SetLayersExpanded expands the tree to N layers shown, the rest being collapsed
+func (m *Model) SetLayersExpanded(num int) error {
+	return nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
+		if layer < num {
+			node.Expand = true
+		} else {
+			node.Expand = false
+		}
+		return nil
+	}, nil)
 }
