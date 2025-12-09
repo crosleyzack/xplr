@@ -25,7 +25,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.KeyMap.Help):
 			m.HelpView.ShowAll = !m.HelpView.ShowAll
 		case key.Matches(msg, m.KeyMap.Quit):
-			return m, tea.Batch(tea.Quit, tea.ClearScreen)
+			return m, tea.Batch(tea.ClearScreen, tea.Quit)
 		case key.Matches(msg, m.KeyMap.Search):
 			m.SearchView.Reset()
 			m.SearchView.Focus()
@@ -47,7 +47,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.SearchView.Reset()
 		default:
 			if m.SearchView.Focused() {
-				// If the search view is focused, update it
+				// If the search view is focused, update it with any key
 				m.SearchView, _ = m.SearchView.Update(msg)
 			} else {
 				model, _ := m.TreeView.Update(msg)

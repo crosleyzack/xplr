@@ -16,6 +16,7 @@ type KeyMap struct {
 	Search         key.Binding
 	Submit         key.Binding
 	Next           key.Binding
+	Num            key.Binding
 }
 
 // Len returns the number of keys in the keymap.
@@ -110,11 +111,15 @@ func DefaultKeyMap() KeyMap {
 		),
 		Submit: key.NewBinding(
 			key.WithKeys("enter"),
-			key.WithHelp("enter", "submit entry"),
+			key.WithHelp("enter", "submit search / copy node"),
 		),
 		Next: key.NewBinding(
 			key.WithKeys("n"),
 			key.WithHelp("n", "go to next match"),
+		),
+		Num: key.NewBinding(
+			key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
+			key.WithHelp("#", "set expanded layers"),
 		),
 	}
 }

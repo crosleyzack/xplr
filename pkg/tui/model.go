@@ -57,7 +57,8 @@ func (m *Model) ShortHelp() []key.Binding {
 		m.KeyMap.Down,
 		m.KeyMap.CollapseToggle,
 		m.KeyMap.CollapseAll,
-		m.KeyMap.ExpandAll,
+		m.KeyMap.Search,
+		m.KeyMap.Submit,
 		m.KeyMap.Quit,
 	}
 	return kb
@@ -76,6 +77,7 @@ func (m *Model) FullHelp() [][]key.Binding {
 		m.KeyMap.Search,
 		m.KeyMap.Submit,
 		m.KeyMap.Next,
+		m.KeyMap.Num,
 		m.KeyMap.Quit,
 		m.KeyMap.Help,
 	}}
