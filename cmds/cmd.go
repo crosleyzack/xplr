@@ -22,7 +22,7 @@ func New() *cobra.Command {
 	var file string
 	cmd := &cobra.Command{
 		Use:     "xplr [-x <layers>] [-f <file> | data]",
-		Version: "0.2.4",
+		Version: "0.2.5",
 		Short:   "Explore a tree data file with a TUI graphical interface",
 		Long:    "Takes in a tree data file (JSON, YAML, TOML) either via flag parameter, first argument, or stdin and produces TUI navigable tree to view and explore the data",
 		Example: "xplr -x 2 -f foo.json",
