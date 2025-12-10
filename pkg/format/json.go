@@ -2,14 +2,24 @@ package format
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
+	"strconv"
 )
 
+// ParseJson convert json byte array to map[string]any
+// if not JSON type, returns err
 func ParseJson(data []byte) (map[string]any, error) {
-	var j map[string]any
-	err := json.Unmarshal(data, &j)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshall json: %w", err)
+	var mp map[string]any
+	if err := json.Unmarshal(data, &mp); err == nil {
+		return mp, nil
 	}
-	return j, nil
+	var arr []any
+	if err := json.Unmarshal(data, &arr); err == nil {
+		mp := map[string]any{}
+		for i, item := range arr {
+			mp[strconv.Itoa(i)] = item
+		}
+		return mp, nil
+	}
+	return nil, errors.New("data is not json type")
 }
