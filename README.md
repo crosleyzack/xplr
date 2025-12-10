@@ -19,6 +19,14 @@ Can be installed using Go 1.23+ via:
 go install github.com/crosleyzack/xplr@latest
 ```
 
+It can also be installed as a nix flake using
+
+```bash
+nix build
+```
+
+which will write the binary to `./result/bin/xplr`
+
 ## Examples
 
 Xplr can take in data by providing a data file:
