@@ -53,3 +53,39 @@ func GetNodeFromTree(root []*Node, path []string) (*Node, []string) {
 	}
 	return nil, path
 }
+
+// GetCommonPath gets the longest common path between two paths
+// IE [foo, bar] and [foo, baz] -> [foo]
+func GetCommonPath(p1, p2 []string) []string {
+	common := make([]string, 0, len(p1))
+	size := min(len(p1), len(p2))
+	for i := range size {
+		if p1[i] == p2[i] {
+			common = append(common, p1[i])
+			continue
+		}
+		break
+	}
+	return common
+}
+
+// TrimPath removes path p2 from the end of path p1
+func TrimPath(p1, p2 []string) []string {
+	for {
+		// if either is empty, we cannot trim more
+		if len(p2) == 0 || len(p1) == 0 {
+			break
+		}
+		last := len(p2) - 1
+		tail := p2[last]
+		p2 = p2[:last]
+		// if the last element of p1 doesn't match
+		// the element of p2, stop iteration
+		if p1[len(p1)-1] != tail {
+			break
+		}
+		// remove last item
+		p1 = p1[:len(p1)-1]
+	}
+	return p1
+}

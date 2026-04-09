@@ -632,4 +632,5 @@ func TestTruncateIfNeeded(t *testing.T) {
 			}
 		})
 	}
+
 }
