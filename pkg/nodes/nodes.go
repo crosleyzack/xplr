@@ -28,6 +28,15 @@ func (n *Node) Equal(other *Node) bool {
 	return n.ID == other.ID
 }
 
+func GetChild(n *Node, key string) *Node {
+	for _, child := range n.Children {
+		if child.Key == key {
+			return child
+		}
+	}
+	return nil
+}
+
 // IsLeaf returns true if the node is a leaf node (has no children)
 func IsLeaf(n *Node) bool {
 	return len(n.Children) == 0

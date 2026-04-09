@@ -127,6 +127,115 @@ func TestGetNodeFromPath(t *testing.T) {
 	}
 }
 
+func TestGetCommonPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		p1       []string
+		p2       []string
+		expected []string
+	}{
+		{
+			name:     "identical paths return full path",
+			p1:       []string{"foo", "bar", "baz"},
+			p2:       []string{"foo", "bar", "baz"},
+			expected: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:     "common prefix then diverge",
+			p1:       []string{"foo", "bar", "baz"},
+			p2:       []string{"foo", "bar", "qux"},
+			expected: []string{"foo", "bar"},
+		},
+		{
+			name:     "no common elements",
+			p1:       []string{"foo"},
+			p2:       []string{"bar"},
+			expected: []string{},
+		},
+		{
+			name:     "both empty",
+			p1:       []string{},
+			p2:       []string{},
+			expected: []string{},
+		},
+		{
+			name:     "p1 empty",
+			p1:       []string{},
+			p2:       []string{"foo", "bar"},
+			expected: []string{},
+		},
+		{
+			name:     "p1 shorter than p2 with common prefix",
+			p1:       []string{"foo", "bar"},
+			p2:       []string{"foo", "bar", "baz"},
+			expected: []string{"foo", "bar"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetCommonPath(tt.p1, tt.p2)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func TestTrimPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		p1       []string
+		p2       []string
+		expected []string
+	}{
+		{
+			name:     "p2 is full suffix of p1",
+			p1:       []string{"a", "b", "c"},
+			p2:       []string{"b", "c"},
+			expected: []string{"a"},
+		},
+		{
+			name:     "p2 is single last element",
+			p1:       []string{"a", "b", "c"},
+			p2:       []string{"c"},
+			expected: []string{"a", "b"},
+		},
+		{
+			name:     "p1 equals p2",
+			p1:       []string{"a", "b"},
+			p2:       []string{"a", "b"},
+			expected: []string{},
+		},
+		{
+			name:     "p2 is empty returns p1 unchanged",
+			p1:       []string{"a", "b", "c"},
+			p2:       []string{},
+			expected: []string{"a", "b", "c"},
+		},
+		{
+			name:     "both empty returns empty",
+			p1:       []string{},
+			p2:       []string{},
+			expected: []string{},
+		},
+		{
+			// TrimPath stops at the first mismatch from the tail — it does not
+			// skip non-matching elements. Here p2's last element "c" matches p1's
+			// tail, so it is trimmed, but then "x" != "b" so trimming stops.
+			name:     "tail mismatch stops early",
+			p1:       []string{"a", "b", "c"},
+			p2:       []string{"x", "c"},
+			expected: []string{"a", "b"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := TrimPath(tt.p1, tt.p2)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
 func TestGetNodeFromTree(t *testing.T) {
 	top, sibling1, sibling2, parent1, leaf := buildTestTree()
 
