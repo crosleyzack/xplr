@@ -14,3 +14,7 @@ func ParseYaml(data []byte) (map[string]any, error) {
 	}
 	return y, nil
 }
+
+func AsYaml(m map[string]any) ([]byte, error) {
+	return yaml.Marshal(m)
+}

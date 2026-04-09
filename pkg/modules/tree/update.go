@@ -6,11 +6,16 @@ import (
 	"iter"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/crosleyzack/xplr/pkg/nodes"
 	"github.com/tiagomelo/go-clipboard/clipboard"
+)
+
+const (
+	PathSeparator = "."
 )
 
 // Update the JSON component
@@ -97,7 +102,7 @@ func (m *Model) GetMatchingNodes(searchTerm string) error {
 	m.searchResults = make([]*nodes.Node, 0)
 	m.searchNext, m.searchStop = iter.Pull(nodes.DFSIter(m.Nodes, func(node *nodes.Node) bool {
 		// match on leaf ndes which match search term
-		if len(node.Children) == 0 {
+		if nodes.IsLeaf(node) {
 			if out, err := regexp.Match(searchTerm, []byte(node.Value)); err == nil && out {
 				return true
 			}
@@ -161,7 +166,7 @@ func (m *Model) NextMatchingNode() {
 // CopyNodePath find path to node and copies it to clipboard
 func (m *Model) CopyNodePath() error {
 	// TODO: if value is empty and has children, get string json
-	s := nodes.GetPathToNode(m.currentNode) + " = " + m.currentNode.Value
+	s := strings.Join(nodes.GetPathToNode(m.currentNode), PathSeparator) + " = " + m.currentNode.Value
 	c := clipboard.New()
 	if err := c.CopyText(s); err != nil {
 		return fmt.Errorf("failed to copy %s to clipboard: %w", s, err)

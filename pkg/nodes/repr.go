@@ -222,7 +222,7 @@ func getJSONType(node *Node) string {
 
 // isArray checks if a node represents an array (all children have numeric keys)
 func isArray(node *Node) bool {
-	if len(node.Children) == 0 {
+	if IsLeaf(node) {
 		return false
 	}
 	for _, child := range node.Children {
@@ -235,7 +235,7 @@ func isArray(node *Node) bool {
 
 // getArrayElementTypes analyzes array elements and returns a descriptive type string
 func getArrayElementTypes(node *Node) string {
-	if !isArray(node) || len(node.Children) == 0 {
+	if !isArray(node) || IsLeaf(node) {
 		return "array"
 	}
 

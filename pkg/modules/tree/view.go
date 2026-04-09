@@ -106,7 +106,7 @@ func replaceAll(s, old, new string) string {
 
 // getLineShapeStyle returns the shape and style for a node based on its state
 func (m *Model) getLineShapeStyle(node *nodes.Node) (string, lipgloss.Style) {
-	if len(node.Children) == 0 {
+	if nodes.IsLeaf(node) {
 		return m.LeafShape, m.Styles.LeafStyle
 	} else if node.Expand {
 		return m.ExpandedShape, m.Styles.ExpandedStyle

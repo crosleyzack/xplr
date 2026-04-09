@@ -14,3 +14,7 @@ func ParseToml(data []byte) (map[string]any, error) {
 	}
 	return t, nil
 }
+
+func AsToml(m map[string]any) ([]byte, error) {
+	return toml.Marshal(m)
+}
