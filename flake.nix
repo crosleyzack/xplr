@@ -16,7 +16,7 @@
           pname = "xplr";
           version = "0.2.5";
           src = ./.;
-          vendorHash = "sha256-yh7jR18s7OIkqLaclTApWpLCY7nebAR8L1i4WigH2gM=";
+          vendorHash = "sha256-ZaEi+yUyqKDDqVA9+/WIIdYKZyXllr541HflDAKuobw=";
         };
 
         devShells.default = pkgs.mkShell {
