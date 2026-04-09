@@ -26,3 +26,13 @@ func GetNodeFromPath(root *Node, path []string) *Node {
 
 	return current
 }
+
+func GetNodeFromTree(root []*Node, path []string) *Node {
+	for _, node := range root {
+		n := GetNodeFromPath(node, path)
+		if n != nil {
+			return n
+		}
+	}
+	return nil
+}

@@ -31,6 +31,19 @@ func IsLeaf(n *Node) bool {
 	return len(n.Children) == 0
 }
 
+// ToMap converts a node back to a map[string]any, which can be used to convert back to JSON
+func ToMap(n []*Node) map[string]any {
+	m := make(map[string]any)
+	for _, n := range n {
+		if IsLeaf(n) {
+			m[n.Key] = n.Value
+			continue
+		}
+		m[n.Key] = ToMap(n.Children)
+	}
+	return m
+}
+
 // New creates a new tree from a JSON object
 func New(json map[string]any, displayLayers uint, repr ReprNode) []*Node {
 	return makeTree(json, 0, displayLayers, repr)

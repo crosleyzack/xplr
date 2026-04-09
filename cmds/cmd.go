@@ -34,7 +34,7 @@ func New() *cobra.Command {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
 			// get data
-			data, err := getData(args, file)
+			data, err := getData(args, []string{file})
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
@@ -46,16 +46,8 @@ func New() *cobra.Command {
 			// parse into node tree
 			n := nodes.New(m, layers, nodes.GetRepr(nodeValueRepr))
 			// parse configs
-			keyMap := keys.NewKeyMap(&c.KeyConfig)
-			style := styles.NewStyle(&c.StyleConfig)
-			format := tree.NewFormat(&c.TreeConfig)
-			model, err := tui.New(format, keyMap, style, n)
-			if err != nil {
-				return fmt.Errorf("failed to create TUI model: %w", err)
-			}
-			p := tea.NewProgram(model)
-			if _, err := p.Run(); err != nil {
-				return err
+			if err = renderTree(c, n); err != nil {
+				return fmt.Errorf("failed to render tree: %w", err)
 			}
 			return nil
 		},
@@ -66,11 +58,11 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func getData(args []string, file string) (data []byte, err error) {
+func getData(args, files []string) (data []byte, err error) {
 	if len(args) > 0 && args[0] != "" {
 		data = []byte(args[0])
-	} else if len(file) > 0 {
-		f, err := os.Open(file)
+	} else if len(files) > 0 && files[0] != "" {
+		f, err := os.Open(files[0])
 		if err != nil {
 			return nil, fmt.Errorf("failed to open data file: %w", err)
 		}
@@ -88,4 +80,20 @@ func getData(args []string, file string) (data []byte, err error) {
 		return nil, fmt.Errorf("no data")
 	}
 	return data, nil
+}
+
+// renderTree takes in a config and a node tree and renders the TUI tree interface
+func renderTree(conf *tui.Config, n []*nodes.Node) error {
+	keyMap := keys.NewKeyMap(&conf.KeyConfig)
+	style := styles.NewStyle(&conf.StyleConfig)
+	format := tree.NewFormat(&conf.TreeConfig)
+	model, err := tui.New(format, keyMap, style, n)
+	if err != nil {
+		return fmt.Errorf("failed to create TUI model: %w", err)
+	}
+	p := tea.NewProgram(model)
+	if _, err := p.Run(); err != nil {
+		return err
+	}
+	return nil
 }

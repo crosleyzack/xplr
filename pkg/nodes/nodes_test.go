@@ -133,6 +133,57 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestToMap(t *testing.T) {
+	tests := []struct {
+		name     string
+		nodes    []*Node
+		expected map[string]any
+	}{
+		{
+			name:     "empty slice",
+			nodes:    []*Node{},
+			expected: map[string]any{},
+		},
+		{
+			name:     "single leaf node",
+			nodes:    []*Node{{Key: "name", Value: "alice"}},
+			expected: map[string]any{"name": "alice"},
+		},
+		{
+			name:     "multiple leaf nodes",
+			nodes:    []*Node{{Key: "a", Value: "1"}, {Key: "b", Value: "2"}},
+			expected: map[string]any{"a": "1", "b": "2"},
+		},
+		{
+			name: "nested node",
+			nodes: []*Node{
+				{
+					Key: "person",
+					Children: []*Node{
+						{Key: "name", Value: "alice"},
+						{Key: "age", Value: "30"},
+					},
+				},
+			},
+			expected: map[string]any{
+				"person": map[string]any{"name": "alice", "age": "30"},
+			},
+		},
+		{
+			name:     "leaf node with empty value",
+			nodes:    []*Node{{Key: "empty"}},
+			expected: map[string]any{"empty": ""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ToMap(tt.nodes)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
 func sortNodes(nodes []*Node) func(i, j int) bool {
 	return func(i, j int) bool { return nodes[i].Key < nodes[j].Key }
 }

@@ -112,3 +112,58 @@ func TestGetNodeFromPath(t *testing.T) {
 		})
 	}
 }
+
+func TestGetNodeFromTree(t *testing.T) {
+	top, sibling1, sibling2, parent1, leaf := buildTestTree()
+
+	tests := []struct {
+		name     string
+		tree     []*Node
+		path     []string
+		expected *Node
+	}{
+		{
+			name:     "empty tree returns nil",
+			tree:     []*Node{},
+			path:     []string{"bar"},
+			expected: nil,
+		},
+		{
+			name:     "empty path returns first root",
+			tree:     []*Node{top},
+			path:     []string{},
+			expected: top,
+		},
+		{
+			name:     "match in first root",
+			tree:     []*Node{top},
+			path:     []string{"bar"},
+			expected: sibling1,
+		},
+		{
+			name:     "multi-level path through first root",
+			tree:     []*Node{top},
+			path:     []string{"bar", "final", "target"},
+			expected: leaf,
+		},
+		{
+			name:     "match in second root when first has no match",
+			tree:     []*Node{sibling2, sibling1},
+			path:     []string{"final"},
+			expected: parent1,
+		},
+		{
+			name:     "no match returns nil",
+			tree:     []*Node{top},
+			path:     []string{"nonexistent"},
+			expected: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GetNodeFromTree(tt.tree, tt.path)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
