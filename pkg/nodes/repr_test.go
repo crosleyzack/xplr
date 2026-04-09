@@ -59,7 +59,7 @@ func TestLeafValuesWithBrackets(t *testing.T) {
 				Key:   "long",
 				Value: strings.Repeat("a", MaxStringLength+10),
 			},
-			expected: strings.Repeat("a", MaxStringLength) + "...",
+			expected: strings.Repeat("a", MaxStringLength) + "…",
 		},
 	}
 
@@ -135,7 +135,7 @@ func TestLeafValuesOnly(t *testing.T) {
 				Key:   "long",
 				Value: strings.Repeat("a", MaxStringLength+10),
 			},
-			expected: strings.Repeat("a", MaxStringLength) + "...",
+			expected: strings.Repeat("a", MaxStringLength) + "…",
 		},
 	}
 
@@ -620,7 +620,7 @@ func TestTruncateIfNeeded(t *testing.T) {
 		{
 			name:     "over max length",
 			input:    strings.Repeat("a", MaxStringLength+10),
-			expected: strings.Repeat("a", MaxStringLength) + "...",
+			expected: strings.Repeat("a", MaxStringLength) + "…",
 		},
 	}
 
@@ -632,4 +632,5 @@ func TestTruncateIfNeeded(t *testing.T) {
 			}
 		})
 	}
+
 }

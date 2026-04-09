@@ -55,6 +55,7 @@ func New() *cobra.Command {
 	cmd.Flags().UintVarP(&layers, "expand", "x", 0, "number of layers to expand by default")
 	cmd.Flags().StringVarP(&file, "file", "f", "", "file to read data from")
 	cmd.Flags().StringVar(&nodeValueRepr, "format", nodes.LeafValuesOnlyRepr, "Format to use to represent an expandable node value. Available formats: "+strings.Join(nodes.GetAvailableFormats(), "|"))
+	cmd.AddCommand(NewDiffCmd())
 	return cmd
 }
 
