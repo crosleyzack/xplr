@@ -26,6 +26,11 @@ func (n *Node) Equal(other *Node) bool {
 	return n.ID == other.ID
 }
 
+// IsLeaf returns true if the node is a leaf node (has no children)
+func IsLeaf(n *Node) bool {
+	return len(n.Children) == 0
+}
+
 // New creates a new tree from a JSON object
 func New(json map[string]any, displayLayers uint, repr ReprNode) []*Node {
 	return makeTree(json, 0, displayLayers, repr)

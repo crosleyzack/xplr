@@ -34,37 +34,14 @@ func New() *cobra.Command {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
 			// get data
-			data := []byte{}
-			if len(args) > 0 && args[0] != "" {
-				data = []byte(args[0])
-			} else if len(file) > 0 {
-				f, err := os.Open(file)
-				if err != nil {
-					return fmt.Errorf("failed to open data file: %w", err)
-				}
-				data, err = io.ReadAll(f)
-				if err != nil {
-					return fmt.Errorf("failed to read file: %w", err)
-				}
-			} else {
-				data, err = io.ReadAll(os.Stdin)
-				if err != nil {
-					return fmt.Errorf("failed to read from pipe: %w", err)
-				}
-			}
-			if len(data) == 0 {
-				return fmt.Errorf("no data")
+			data, err := getData(args, file)
+			if err != nil {
+				return fmt.Errorf("failed to get data: %w", err)
 			}
 			// get data as map[string]any
-			var m map[string]any
-			for _, fmt := range []format.Format{format.ParseJson, format.ParseYaml, format.ParseToml} {
-				m, err = fmt(data)
-				if err == nil {
-					break
-				}
-			}
-			if len(m) == 0 {
-				return fmt.Errorf("no data")
+			m, err := format.Parse(data)
+			if err != nil {
+				return fmt.Errorf("failed to parse data: %w", err)
 			}
 			// parse into node tree
 			n := nodes.New(m, layers, nodes.GetRepr(nodeValueRepr))
@@ -83,8 +60,32 @@ func New() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.PersistentFlags().UintVarP(&layers, "expand", "x", 0, "number of layers to expand by default")
-	cmd.PersistentFlags().StringVarP(&file, "file", "f", "", "file to read data from")
-	cmd.PersistentFlags().StringVar(&nodeValueRepr, "format", nodes.LeafValuesOnlyRepr, "Format to use to represent an expandable node value. Available formats: "+strings.Join(nodes.GetAvailableFormats(), "|"))
+	cmd.Flags().UintVarP(&layers, "expand", "x", 0, "number of layers to expand by default")
+	cmd.Flags().StringVarP(&file, "file", "f", "", "file to read data from")
+	cmd.Flags().StringVar(&nodeValueRepr, "format", nodes.LeafValuesOnlyRepr, "Format to use to represent an expandable node value. Available formats: "+strings.Join(nodes.GetAvailableFormats(), "|"))
 	return cmd
+}
+
+func getData(args []string, file string) (data []byte, err error) {
+	if len(args) > 0 && args[0] != "" {
+		data = []byte(args[0])
+	} else if len(file) > 0 {
+		f, err := os.Open(file)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open data file: %w", err)
+		}
+		data, err = io.ReadAll(f)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read file: %w", err)
+		}
+	} else {
+		data, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read from pipe: %w", err)
+		}
+	}
+	if len(data) == 0 {
+		return nil, fmt.Errorf("no data")
+	}
+	return data, nil
 }

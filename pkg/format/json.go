@@ -23,3 +23,7 @@ func ParseJson(data []byte) (map[string]any, error) {
 	}
 	return nil, errors.New("data is not json type")
 }
+
+func AsJson(m map[string]any) ([]byte, error) {
+	return json.Marshal(m)
+}
