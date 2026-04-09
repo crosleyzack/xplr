@@ -112,6 +112,24 @@ func LeafValuesOnly(n *Node) string {
 	return truncateIfNeeded(b.String())
 }
 
+// LeafKeyAndValues represents a node by its leaf node Key and Value
+func LeafKeyAndValues(n *Node) string {
+	var b strings.Builder
+	if len(n.Children) > 0 {
+		first := true
+		for _, child := range n.Children {
+			b.WriteString(spacerToken(first))
+			b.WriteString(LeafKeyAndValues(child))
+			first = false
+		}
+	} else {
+		b.WriteString(n.Key)
+		b.WriteString(":")
+		b.WriteString(n.Value)
+	}
+	return truncateIfNeeded(b.String())
+}
+
 // DirectChildrenKeys represents a node as the keys of its direct children
 func DirectChildrenKeys(n *Node) string {
 	var b strings.Builder
@@ -249,8 +267,9 @@ func getArrayElementTypes(node *Node) string {
 
 // truncateIfNeeded truncates string if it exceeds MaxStringLength
 func truncateIfNeeded(s string) string {
+	s = strings.TrimSpace(s)
 	if len(s) > MaxStringLength {
-		return s[:MaxStringLength] + "..."
+		return s[:MaxStringLength] + "…"
 	}
 	return s
 }
