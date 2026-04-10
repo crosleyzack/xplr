@@ -8,31 +8,48 @@ func GetPathToNode(n *Node) []string {
 	return path
 }
 
-func GetNodeFromPath(root *Node, path []string) *Node {
+// GetNodeFromPath walks down the tree from root following the path and returns
+// the node at the end of the path and any remaining path if it doesn't exist
+func GetNodeFromPath(root *Node, path []string) (*Node, []string) {
+	if root == nil {
+		return nil, path
+	}
+	if len(path) == 0 {
+		return root, nil
+	}
 	current := root
+	remaining := path
 	for _, part := range path {
 		found := false
 		for _, child := range current.Children {
 			if child.Key == part {
 				current = child
+				remaining = remaining[1:]
 				found = true
 				break
 			}
 		}
 		if !found {
-			return nil
+			return current, remaining
 		}
 	}
 
-	return current
+	return current, nil
 }
 
-func GetNodeFromTree(root []*Node, path []string) *Node {
+// GetNodeFromTree walks down the tree from root following the path and returns
+// the node at the end of the path and any remaining path if it doesn't exist
+func GetNodeFromTree(root []*Node, path []string) (*Node, []string) {
+	if len(path) == 0 {
+		return nil, nil
+	}
+	if len(root) == 0 {
+		return nil, path
+	}
 	for _, node := range root {
-		n := GetNodeFromPath(node, path)
-		if n != nil {
-			return n
+		if node.Key == path[0] {
+			return GetNodeFromPath(node, path[1:])
 		}
 	}
-	return nil
+	return nil, path
 }

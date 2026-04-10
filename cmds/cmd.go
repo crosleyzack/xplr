@@ -34,7 +34,7 @@ func New() *cobra.Command {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
 			// get data
-			data, err := getData(args, []string{file})
+			data, err := getData(getSafe(args, 0), file)
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
@@ -58,11 +58,11 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func getData(args, files []string) (data []byte, err error) {
-	if len(args) > 0 && args[0] != "" {
-		data = []byte(args[0])
-	} else if len(files) > 0 && files[0] != "" {
-		f, err := os.Open(files[0])
+func getData(args, file string) (data []byte, err error) {
+	if args != "" {
+		data = []byte(args)
+	} else if file != "" {
+		f, err := os.Open(file)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open data file: %w", err)
 		}
@@ -96,4 +96,12 @@ func renderTree(conf *tui.Config, n []*nodes.Node) error {
 		return err
 	}
 	return nil
+}
+
+func getSafe[T any](arr []T, idx int) T {
+	if idx < 0 || idx >= len(arr) {
+		var zero T
+		return zero
+	}
+	return arr[idx]
 }

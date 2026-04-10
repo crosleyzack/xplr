@@ -134,7 +134,7 @@ func KeyCountOnly(n *Node) string {
 
 	if len(n.Children) > 0 {
 		var metadata string
-		if isArray(n) {
+		if IsArray(n) {
 			metadata = fmt.Sprintf("(%d items)", len(n.Children))
 		} else {
 			metadata = fmt.Sprintf("(%d keys)", len(n.Children))
@@ -152,7 +152,7 @@ func KeyNamesWithTypes(n *Node) string {
 	var b strings.Builder
 	if len(n.Children) > 0 {
 		var metadata string
-		if isArray(n) {
+		if IsArray(n) {
 			arrayType := getArrayElementTypes(n)
 			metadata = fmt.Sprintf("(%s)", arrayType)
 		} else {
@@ -176,7 +176,7 @@ func KeyCountAndTypes(n *Node) string {
 	var b strings.Builder
 	if len(n.Children) > 0 {
 		var metadata string
-		if isArray(n) {
+		if IsArray(n) {
 			arrayType := getArrayElementTypes(n)
 			metadata = fmt.Sprintf("(%d items: %s)", len(n.Children), arrayType)
 		} else {
@@ -198,7 +198,7 @@ func KeyCountAndTypes(n *Node) string {
 // getJSONType determines the JSON type of a node's value
 func getJSONType(node *Node) string {
 	if len(node.Children) > 0 {
-		if isArray(node) {
+		if IsArray(node) {
 			return "array"
 		}
 		return "object"
@@ -220,22 +220,9 @@ func getJSONType(node *Node) string {
 	return "string"
 }
 
-// isArray checks if a node represents an array (all children have numeric keys)
-func isArray(node *Node) bool {
-	if IsLeaf(node) {
-		return false
-	}
-	for _, child := range node.Children {
-		if _, err := strconv.Atoi(child.Key); err != nil {
-			return false
-		}
-	}
-	return true
-}
-
 // getArrayElementTypes analyzes array elements and returns a descriptive type string
 func getArrayElementTypes(node *Node) string {
-	if !isArray(node) || IsLeaf(node) {
+	if !IsArray(node) || IsLeaf(node) {
 		return "array"
 	}
 
@@ -274,4 +261,9 @@ func spacerToken(first bool) string {
 		return ""
 	}
 	return " "
+}
+
+// EmptyRepr represents a all nodes with empty string
+func EmptyRepr(n *Node) string {
+	return ""
 }
