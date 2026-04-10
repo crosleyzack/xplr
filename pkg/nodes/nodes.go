@@ -59,6 +59,36 @@ func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode
 	return nodes
 }
 
+// IsArray checks if a node represents an array (all children have numeric keys)
+func IsArray(node *Node) bool {
+	if IsLeaf(node) {
+		return false
+	}
+	for _, child := range node.Children {
+		if _, err := strconv.Atoi(child.Key); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+// IsLeafArray checks if a node represents an array (all children have numeric keys)
+// and all children are leaf nodes
+func IsLeafArray(node *Node) bool {
+	if IsLeaf(node) {
+		return false
+	}
+	for _, child := range node.Children {
+		if _, err := strconv.Atoi(child.Key); err != nil {
+			return false
+		}
+		if !IsLeaf(child) {
+			return false
+		}
+	}
+	return true
+}
+
 // makeNode creates a new node from a key and value
 func makeNode(key string, value any, layer uint, displayLayers uint, repr ReprNode) *Node {
 	node := &Node{

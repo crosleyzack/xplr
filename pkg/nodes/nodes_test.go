@@ -207,3 +207,76 @@ func compareNodes(a, b *Node) bool {
 	}
 	return true
 }
+
+func TestIsArray(t *testing.T) {
+	tests := []struct {
+		name     string
+		node     *Node
+		expected bool
+	}{
+		{
+			name: "numeric keys array",
+			node: &Node{
+				Children: []*Node{
+					{Key: "0", Value: "first"},
+					{Key: "1", Value: "second"},
+					{Key: "2", Value: "third"},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "mixed keys not array",
+			node: &Node{
+				Children: []*Node{
+					{Key: "name", Value: "John"},
+					{Key: "age", Value: "30"},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "non-sequential numeric keys still array",
+			node: &Node{
+				Children: []*Node{
+					{Key: "0", Value: "first"},
+					{Key: "2", Value: "third"},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "empty children not array",
+			node: &Node{
+				Children: []*Node{},
+			},
+			expected: false,
+		},
+		{
+			name: "no children not array",
+			node: &Node{
+				Value: "simple",
+			},
+			expected: false,
+		},
+		{
+			name: "mixed numeric and string keys not array",
+			node: &Node{
+				Children: []*Node{
+					{Key: "0", Value: "first"},
+					{Key: "name", Value: "test"},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsArray(tt.node)
+			if result != tt.expected {
+				t.Errorf("isArray() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
