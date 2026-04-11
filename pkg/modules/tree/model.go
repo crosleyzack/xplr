@@ -58,7 +58,7 @@ func (m *Model) NumberOfNodes() int {
 	err := nodes.DFS(m.Nodes, func(node *nodes.Node, _ int) error {
 		count++
 		return nil
-	}, nil)
+	})
 	if err != nil {
 		panic(fmt.Sprintf("error counting nodes: %v", err))
 	}

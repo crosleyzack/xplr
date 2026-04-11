@@ -86,7 +86,7 @@ func (m *Model) ExpandCollapseAll(n *nodes.Node, expand bool) {
 			n.Expand = expand
 			return nil
 		},
-		&nodes.SearchConfig{SearchAll: true},
+		nodes.WithNextNodes(nodes.AllChildren),
 	)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to expand-collapse all: %v", err))
@@ -111,7 +111,7 @@ func (m *Model) GetMatchingNodes(searchTerm string) error {
 			}
 		}
 		return false
-	}))
+	}, nodes.WithNextNodes(nodes.AllChildren)))
 	return nil
 }
 
@@ -160,7 +160,7 @@ func (m *Model) NextMatchingNode() {
 		}
 		count++
 		return nil
-	}, nil)
+	})
 }
 
 // CopyNodePath find path to node and copies it to clipboard
@@ -183,5 +183,5 @@ func (m *Model) SetLayersExpanded(num int) error {
 			node.Expand = false
 		}
 		return nil
-	}, nil)
+	})
 }
