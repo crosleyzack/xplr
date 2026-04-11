@@ -15,7 +15,7 @@ import (
 
 type configLoc struct {
 	FileLoc   string `env:"XPLR_CONFIG"`
-	ConfigDir string `env:"XDG_CONFIG_HOME,default=~/.config"`
+	ConfigDir string `env:"XDG_CONFIG_HOME"`
 }
 
 type Config struct {
@@ -24,6 +24,10 @@ type Config struct {
 	tree.TreeConfig
 }
 
+const (
+	configPath = "/xplr/config.toml"
+)
+
 // NewConfig creates a new Config object
 func NewConfig() (*Config, error) {
 	// Load service config
@@ -31,19 +35,31 @@ func NewConfig() (*Config, error) {
 	if _, err := env.UnmarshalFromEnviron(&conf); err != nil {
 		return nil, fmt.Errorf("failed to read config location: %w", err)
 	}
-	path := conf.FileLoc
-	if path == "" {
-		path = filepath.Join(conf.ConfigDir, "/xplr/config.toml")
+	var path string
+	switch {
+	case conf.FileLoc != "":
+		path = conf.FileLoc
+	case conf.ConfigDir != "":
+		path = filepath.Join(conf.ConfigDir, configPath)
+	default:
+		home, err := os.UserConfigDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user home: %w", err)
+		}
+		path = filepath.Join(home, configPath)
 	}
 	var c Config
 	if _, err := os.Stat(path); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
+			fmt.Printf("path doesn't exist %s\n", path)
 			return &c, nil
 		}
+		fmt.Printf("failed to stat %s\n", path)
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 	_, err := toml.DecodeFile(path, &c)
 	if err != nil {
+		fmt.Printf("failed to read %s\n", path)
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 	return &c, nil

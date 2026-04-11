@@ -6,6 +6,7 @@ type TreeConfig struct {
 	LeafShape               string
 	SpacesPerLayer          int
 	HideSummaryWhenExpanded bool
+	SpacesAfterKey          int
 }
 
 type TreeFormat struct {
@@ -16,6 +17,7 @@ type TreeFormat struct {
 	LeafShape               string
 	SpacesPerLayer          int
 	HideSummaryWhenExpanded bool
+	SpacesAfterKey          int
 }
 
 func NewFormat(c *TreeConfig) *TreeFormat {
@@ -35,6 +37,9 @@ func NewFormat(c *TreeConfig) *TreeFormat {
 	if c.HideSummaryWhenExpanded {
 		format.HideSummaryWhenExpanded = c.HideSummaryWhenExpanded
 	}
+	if c.SpacesAfterKey > 0 {
+		format.SpacesAfterKey = c.SpacesAfterKey
+	}
 	return format
 }
 
@@ -47,5 +52,6 @@ func DefaultFormat() *TreeFormat {
 		ExpandedShape:           "╰─",
 		SpacesPerLayer:          2,
 		HideSummaryWhenExpanded: false,
+		SpacesAfterKey:          4,
 	}
 }
