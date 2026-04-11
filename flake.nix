@@ -16,7 +16,11 @@
           pname = "xplr";
           version = "0.2.5";
           src = ./.;
-          vendorHash = "sha256-yVeuz/S1VPEXDK/AOIGpS/gefdGnyWnMG/IJjB3ctDM=";
+          vendorHash = "sha256-yh7jR18s7OIkqLaclTApWpLCY7nebAR8L1i4WigH2gM=";
+        };
+
+        devShells.default = pkgs.mkShell {
+          packages = [ self.packages.${system}.default ];
         };
       }
     );

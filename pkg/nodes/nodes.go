@@ -1,7 +1,9 @@
 package nodes
 
 import (
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -56,6 +58,9 @@ func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode
 		node := makeNode(k, v, layer, displayLayers, repr)
 		nodes = append(nodes, node)
 	}
+	slices.SortFunc(nodes, func(a, b *Node) int {
+		return strings.Compare(a.Key, b.Key)
+	})
 	return nodes
 }
 
