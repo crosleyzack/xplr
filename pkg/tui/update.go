@@ -22,13 +22,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.KeyMap.Help):
-			m.HelpView.ShowAll = !m.HelpView.ShowAll
-		case key.Matches(msg, m.KeyMap.Quit):
-			return m, tea.Batch(tea.ClearScreen, tea.Quit)
-		case key.Matches(msg, m.KeyMap.Search):
-			m.SearchView.Reset()
-			m.SearchView.Focus()
 		case key.Matches(msg, m.KeyMap.Submit):
 			if !m.SearchView.Focused() {
 				// copy the path do this node
@@ -45,16 +38,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.TreeView.NextMatchingNode()
 			m.SearchView.Blur()
 			m.SearchView.Reset()
+		case m.SearchView.Focused():
+			// If the search view is focused, update it with any key
+			m.SearchView, _ = m.SearchView.Update(msg)
+		case key.Matches(msg, m.KeyMap.Help):
+			m.HelpView.ShowAll = !m.HelpView.ShowAll
+		case key.Matches(msg, m.KeyMap.Quit):
+			return m, tea.Batch(tea.ClearScreen, tea.Quit)
+		case key.Matches(msg, m.KeyMap.Search):
+			m.SearchView.Reset()
+			m.SearchView.Focus()
 		default:
-			if m.SearchView.Focused() {
-				// If the search view is focused, update it with any key
-				m.SearchView, _ = m.SearchView.Update(msg)
-			} else {
-				model, _ := m.TreeView.Update(msg)
-				var ok bool
-				if m.TreeView, ok = model.(*tree.Model); !ok {
-					log.Errorf("Failed to update tree model")
-				}
+			model, _ := m.TreeView.Update(msg)
+			var ok bool
+			if m.TreeView, ok = model.(*tree.Model); !ok {
+				log.Errorf("Failed to update tree model")
 			}
 		}
 	}
