@@ -9,10 +9,6 @@ import (
 	"github.com/crosleyzack/xplr/pkg/nodes"
 )
 
-const (
-	spacesAfterKey = 2 // Number of spaces after the key in the tree view
-)
-
 // siblingMaxKeyWidth calculates the maximum key width among siblings
 func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
 	if node == nil {
@@ -127,31 +123,37 @@ func (m *Model) getLine(node *nodes.Node, layer int, index int) string {
 		availableChars -= spaces + utf8.RuneCountInString(shape) + 1
 	}
 	// Generate the correct index for the node
+	str += m.nodeRenderer(node, index, availableChars) + "\n"
+	return str
+}
+
+// nodeRenderer render the node itself in the remaining space after line shape and spacing
+func (m *Model) nodeRenderer(node *nodes.Node, index, availableChars int) string {
 	keyStr := replaceAll(node.Key, "\n\r", " ")
 	valueStr := replaceAll(node.Value, "\n\r", " ")
 	keyWidth := utf8.RuneCountInString(keyStr)
-	spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + spacesAfterKey - keyWidth
+	spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + m.spacesAfterKey - keyWidth
 
 	availableChars -= keyWidth + spacesNeeded
 	if utf8.RuneCountInString(valueStr) > availableChars {
 		// if we have more runes than terminal width, truncate
-		valueStr = valueStr[:availableChars-4] + "..."
+		valueStr = valueStr[:availableChars-1] + "…"
 	}
 	// If we are at the cursor, we add the selected style to the string
 	styledKey := ""
 	styledValue := ""
-	if m.cursor == index {
+	switch {
+	case m.cursor == index:
 		m.currentNode = node
 		styledKey = m.Styles.Selected.Render(keyStr)
 		styledValue = m.Styles.Selected.Render(valueStr)
-	} else {
+	default:
 		styledKey = m.Styles.Unselected.Render(keyStr)
 		styledValue = m.Styles.Unselected.Render(valueStr)
 	}
-	str += styledKey
+	str := styledKey
 	if !node.Expand || !m.hideSummaryWhenExpanded {
 		str += strings.Repeat(" ", spacesNeeded) + styledValue
 	}
-	str += "\n"
 	return str
 }

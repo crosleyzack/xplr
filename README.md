@@ -63,6 +63,7 @@ ExpandableShape = "❭"
 LeafShape = "└─"
 SpacesPerLayer = 2
 HideSummaryWhenExpanded = false
+SpacesAfterKey = 4
 # colors
 ExpandedShapeColor = "#d99c63"
 ExpandableShapeColor = "#d19359"

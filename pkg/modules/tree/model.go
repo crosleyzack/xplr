@@ -27,6 +27,7 @@ type Model struct {
 	searchNext              func() (*nodes.Node, bool)
 	searchStop              func()
 	currentNode             *nodes.Node
+	spacesAfterKey          int
 	hideSummaryWhenExpanded bool
 }
 
@@ -45,6 +46,7 @@ func New(format *TreeFormat, keys keys.KeyMap, style styles.Style, nodes []*node
 		LeafShape:               format.LeafShape,
 		SpacesPerLayer:          format.SpacesPerLayer,
 		hideSummaryWhenExpanded: format.HideSummaryWhenExpanded,
+		spacesAfterKey:          format.SpacesAfterKey,
 		searchResults:           nil,
 		searchNext:              nil,
 		searchStop:              nil,
