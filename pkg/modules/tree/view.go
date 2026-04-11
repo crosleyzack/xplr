@@ -67,7 +67,7 @@ func (m *Model) renderTree() (string, error) {
 		}
 		return nil
 	}
-	if err := nodes.DFS(m.Nodes, f, nil); err != nil {
+	if err := nodes.DFS(m.Nodes, f); err != nil {
 		return "", fmt.Errorf("Failed to render tree: %w", err)
 	}
 	return lipgloss.NewStyle().Height(m.Height).Width(m.Width).Render(b.String()), nil
