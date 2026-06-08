@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-slim
     continue-on-error: true
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
@@ -27,6 +31,10 @@ jobs:
   go-tests:
     runs-on: ubuntu-slim
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -36,3 +44,16 @@ jobs:
         run: go build -v ./...
       - name: Test
         run: go test -v ./...
+
+  govulncheck:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@v4
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-input: 1.24
