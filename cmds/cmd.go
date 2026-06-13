@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/crosleyzack/xplr/pkg/format"
 	"github.com/crosleyzack/xplr/pkg/keys"
 	"github.com/crosleyzack/xplr/pkg/modules/tree"
@@ -92,6 +93,14 @@ func renderTree(conf *tui.Config, n []*nodes.Node) error {
 	if err != nil {
 		return fmt.Errorf("failed to create TUI model: %w", err)
 	}
+	// if we have a metadata key, add all its children to conditional styling
+	m := make(map[string]lipgloss.Style, 0)
+	if meta, _ := nodes.GetNodeFromTree(n, []string{nodes.MetaKey}); meta != nil {
+		for _, child := range meta.Children {
+			m[child.Key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
+		}
+	}
+	style.KeyBasedStyles = m
 	p := tea.NewProgram(model)
 	if _, err := p.Run(); err != nil {
 		return err
