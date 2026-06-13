@@ -63,7 +63,12 @@ func NewDiffCmd() *cobra.Command {
 			}
 			// set the tree repr values
 			if err := updateRepr(diffTree, nodes.LeafKeyAndValues); err != nil {
-				return fmt.Errorf("failed to update tree repr: %v", err)
+				return fmt.Errorf("failed to update tree repr: %w", err)
+			}
+			// add meta
+			diffTree, err = addMeta(diffTree, c, key1, key2)
+			if err != nil {
+				return fmt.Errorf("failed to add tree meta: %w", err)
 			}
 
 			// TODO output diff tree to output
@@ -316,4 +321,27 @@ func copyNode(n *nodes.Node) *nodes.Node {
 		Parent:   n.Parent,
 		Children: n.Children,
 	}
+}
+
+func addMeta(tree []*nodes.Node, conf *tui.Config, key1 string, key2 string) ([]*nodes.Node, error) {
+	colors := conf.DiffColors
+	if l := len(colors); l < 2 {
+		return nil, fmt.Errorf("Not enough configured colors: %d", l)
+	}
+	var err error
+	tree, err = addNode(
+		tree, []string{nodes.MetaKey},
+		nodes.NewNode(key1, colors[0], 1, 0, nodes.LeafKeyAndValues),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add meta for %s: %w", key1, err)
+	}
+	tree, err = addNode(
+		tree, []string{nodes.MetaKey},
+		nodes.NewNode(key2, colors[1], 1, 0, nodes.LeafKeyAndValues),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add meta for %s: %w", key2, err)
+	}
+	return tree, nil
 }

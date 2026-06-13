@@ -37,6 +37,19 @@ func GetChild(n *Node, key string) *Node {
 	return nil
 }
 
+// GetAncestor for a given node by key identifier
+func GetAncestor(n *Node, key string) *Node {
+	for {
+		if n.Key == key {
+			return n
+		}
+		if n.Parent == nil {
+			return nil
+		}
+		n = n.Parent
+	}
+}
+
 // IsLeaf returns true if the node is a leaf node (has no children)
 func IsLeaf(n *Node) bool {
 	return len(n.Children) == 0
@@ -64,7 +77,7 @@ func New(json map[string]any, displayLayers uint, repr ReprNode) []*Node {
 func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode) []*Node {
 	nodes := make([]*Node, 0, len(json))
 	for k, v := range json {
-		node := makeNode(k, v, layer, displayLayers, repr)
+		node := NewNode(k, v, layer, displayLayers, repr)
 		nodes = append(nodes, node)
 	}
 	slices.SortFunc(nodes, func(a, b *Node) int {
@@ -103,8 +116,8 @@ func IsLeafArray(node *Node) bool {
 	return true
 }
 
-// makeNode creates a new node from a key and value
-func makeNode(key string, value any, layer uint, displayLayers uint, repr ReprNode) *Node {
+// NewNode creates a new node from a key and value
+func NewNode(key string, value any, layer uint, displayLayers uint, repr ReprNode) *Node {
 	node := &Node{
 		ID:     uuid.New(),
 		Key:    key,
@@ -122,7 +135,7 @@ func makeNode(key string, value any, layer uint, displayLayers uint, repr ReprNo
 	case []any:
 		node.Children = make([]*Node, 0, len(v))
 		for i, child := range v {
-			childNode := makeNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers, repr)
+			childNode := NewNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers, repr)
 			childNode.Parent = node
 			node.Children = append(node.Children, childNode)
 		}

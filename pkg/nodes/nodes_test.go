@@ -52,7 +52,7 @@ func TestMakeNode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			node := makeNode(tt.key, tt.value, 0, 2, LeafValuesOnly)
+			node := NewNode(tt.key, tt.value, 0, 2, LeafValuesOnly)
 			sort.Slice(node.Children, sortNodes(node.Children))
 			assert.True(t, compareNodes(node, &tt.expected))
 		})

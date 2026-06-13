@@ -6,8 +6,8 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+// StyleConfig defines the style information for the xplr tui
 type StyleConfig struct {
-	// colors
 	ExpandedShapeColor        string
 	ExpandableShapeColor      string
 	LeafShapeColor            string
@@ -15,8 +15,10 @@ type StyleConfig struct {
 	SelectedBackgroundColor   string
 	UnselectedForegroundColor string
 	HelpColor                 string
+	DiffColors                []string
 }
 
+// NewConfig creates a style config by unmarshalling data
 func NewConfig(data []byte) (*StyleConfig, error) {
 	var c StyleConfig
 	err := toml.Unmarshal(data, &c)

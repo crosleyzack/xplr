@@ -57,7 +57,13 @@ func (m *Model) renderTree() (string, error) {
 		if idx < minRow || idx > maxRow {
 			return nil // Skip nodes outside the display range
 		}
-		str := m.getLine(node, layer, idx)
+		s := make([]lipgloss.Style, 0)
+		for key, style := range m.Styles.KeyBasedStyles {
+			if nodes.GetAncestor(node, key) != nil {
+				s = append(s, style)
+			}
+		}
+		str := m.getLine(node, layer, idx, s...)
 		if len(str) > 0 {
 			b.WriteString(str)
 		}
@@ -112,7 +118,7 @@ func (m *Model) getLineShapeStyle(node *nodes.Node) (string, lipgloss.Style) {
 }
 
 // getLine generates a line for the tree corresponding to this node
-func (m *Model) getLine(node *nodes.Node, layer int, index int) string {
+func (m *Model) getLine(node *nodes.Node, layer int, index int, styles ...lipgloss.Style) string {
 	var str string
 	availableChars := m.Width
 	shape, style := m.getLineShapeStyle(node)
@@ -124,6 +130,10 @@ func (m *Model) getLine(node *nodes.Node, layer int, index int) string {
 	}
 	// Generate the correct index for the node
 	str += m.nodeRenderer(node, index, availableChars) + "\n"
+	// set additional styles if applied
+	for _, style := range styles {
+		str = style.Render(str)
+	}
 	return str
 }
 
