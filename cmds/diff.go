@@ -98,8 +98,8 @@ func NewDiffCmd() *cobra.Command {
 	}
 	cmd.Flags().StringSliceVarP(&files, "file", "f", nil, "files to read data from")
 	cmd.Flags().StringVarP(&output, "out", "o", "", "what to output the diff to (defaults to tree display)")
-	cmd.Flags().StringVar(&key1, "key1", "f1", "what to put as key in tree to denote this is from tree1")
-	cmd.Flags().StringVar(&key2, "key2", "f2", "what to put as key in tree to denote this is from tree2")
+	cmd.Flags().StringVar(&key1, "key1", "_f1", "what to put as key in tree to denote this is from tree1")
+	cmd.Flags().StringVar(&key2, "key2", "_f2", "what to put as key in tree to denote this is from tree2")
 	cmd.Flags().StringVar(&nilValue, "nilValue", "nil", "what to use as value for missing nodes in one tree")
 	return cmd
 }
@@ -258,7 +258,14 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 	// find or create root-level node matching path[0]
 	current, remaining := nodes.GetNodeFromTree(tree, path)
 
-	// create tree for remaining path and n at the end
+	// If remaining is empty, current is the exact target node - attach n directly.
+	if len(remaining) == 0 {
+		current.Children = append(current.Children, n)
+		n.Parent = current
+		return tree, nil
+	}
+
+	// create tree for remaining path
 	m := make(map[string]any)
 	mapPtr := m
 	for _, part := range remaining {
@@ -267,19 +274,18 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 	}
 	subtree := nodes.New(m, 0, nodes.LeafKeyAndValues)
 
-	// attach new tree to end of the current tree
-	// if there is no tree as current is nil, add to root and set current
 	if current == nil {
-		current.Children = append(current.Children, subtree...)
-	} else {
+		// no matching root node found - add subtree to root tree
 		tree = append(tree, subtree...)
-		current = subtree[0]
+	} else {
+		// found a node partway through path - attach subtree to it
+		current.Children = append(current.Children, subtree...)
 	}
 
-	// get node from end of subtree
+	// get node from end of subtree and attach n
 	node, remaining := nodes.GetNodeFromTree(subtree, remaining)
 	if node == nil || len(remaining) != 0 {
-		fmt.Printf("remaining %s does not match any node in subtree for path: %v, subtree: %v\n", remaining, path, subtree)
+		return nil, fmt.Errorf("failed to find node in subtree for path: %v", path)
 	}
 
 	node.Children = append(node.Children, n)
@@ -323,10 +329,12 @@ func copyNode(n *nodes.Node) *nodes.Node {
 	}
 }
 
+var defaultDiffColors = []string{"#ad0116", "#006222"}
+
 func addMeta(tree []*nodes.Node, conf *tui.Config, key1 string, key2 string) ([]*nodes.Node, error) {
 	colors := conf.DiffColors
-	if l := len(colors); l < 2 {
-		return nil, fmt.Errorf("Not enough configured colors: %d", l)
+	if len(colors) < 2 {
+		colors = defaultDiffColors
 	}
 	var err error
 	tree, err = addNode(

@@ -88,19 +88,17 @@ func getData(args, file string) (data []byte, err error) {
 func renderTree(conf *tui.Config, n []*nodes.Node) error {
 	keyMap := keys.NewKeyMap(&conf.KeyConfig)
 	style := styles.NewStyle(&conf.StyleConfig)
+	// populate KeyBasedStyles before creating the model so the copy it receives is complete
+	if meta, _ := nodes.GetNodeFromTree(n, []string{nodes.MetaKey}); meta != nil {
+		for _, child := range meta.Children {
+			style.KeyBasedStyles[child.Key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
+		}
+	}
 	format := tree.NewFormat(&conf.TreeConfig)
 	model, err := tui.New(format, keyMap, style, n)
 	if err != nil {
 		return fmt.Errorf("failed to create TUI model: %w", err)
 	}
-	// if we have a metadata key, add all its children to conditional styling
-	m := make(map[string]lipgloss.Style, 0)
-	if meta, _ := nodes.GetNodeFromTree(n, []string{nodes.MetaKey}); meta != nil {
-		for _, child := range meta.Children {
-			m[child.Key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
-		}
-	}
-	style.KeyBasedStyles = m
 	p := tea.NewProgram(model)
 	if _, err := p.Run(); err != nil {
 		return err
