@@ -112,7 +112,7 @@ func (m *Model) getLineShapeStyle(node *nodes.Node) (string, lipgloss.Style) {
 }
 
 // getLine generates a line for the tree corresponding to this node
-func (m *Model) getLine(node *nodes.Node, layer int, index int, styles ...lipgloss.Style) string {
+func (m *Model) getLine(node *nodes.Node, layer int, index int) string {
 	var str string
 	availableChars := m.Width
 	shape, style := m.getLineShapeStyle(node)
@@ -124,10 +124,6 @@ func (m *Model) getLine(node *nodes.Node, layer int, index int, styles ...lipglo
 	}
 	// Generate the correct index for the node
 	str += m.nodeRenderer(node, index, availableChars) + "\n"
-	// set additional styles if applied
-	for _, style := range styles {
-		str = style.Render(str)
-	}
 	return str
 }
 

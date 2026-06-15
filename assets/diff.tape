@@ -4,37 +4,39 @@ Output diff.gif
 Set FontSize 30
 Set Width 1200
 Set Height 800
-Set TypingSpeed 0.2
 Set Padding 1
 
-Type@200s "xplr diff -f <(curl https://pokeapi.co/api/v2/pokemon/155) -f <(curl https://pokeapi.co/api/v2/pokemon/156) --key1 cynd --key2 quil
+Hide
+Set TypingSpeed 0
+Type "xplr diff -f <(curl https://pokeapi.co/api/v2/pokemon/155) -f <(curl https://pokeapi.co/api/v2/pokemon/156) -k _cynd -k _quil"
+Show
+
+Set TypingSpeed 0.2
+Sleep 1s
 Enter
-Sleep 1s
-Down
-Sleep 1s
-Down
-Sleep 1s
-Down
-Sleep 1s
+Sleep 0.5s
+Type "G"
+Enter
+Sleep 0.5s
 Tab
-Sleep 1s
-Down
-Sleep 1s
+Sleep 0.5s
+Up
+Sleep 0.5s
 Tab
-Sleep 1s
-Type "3"
-Sleep 1s
-Down
-Sleep 1s
+Sleep 0.5s
+Up
+Sleep 0.5s
+Tab
+Sleep 0.5s
 Type@500ms "/flame"
-Sleep 1s
+Sleep 0.5s
 Enter
-Sleep 1s
+Sleep 0.5s
 Type n
-Sleep 1s
+Sleep 0.5s
 Type n
-Sleep 1s
+Sleep 0.5s
 Type n
-Sleep 1s
+Sleep 0.5s
 Type gg
-Sleep 2s
+Sleep 1s
