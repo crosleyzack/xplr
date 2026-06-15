@@ -10,6 +10,9 @@ Xplr allows you explore tree-based file formats as an interactive TUI tree. This
 
 <img alt="example" src="./assets/demo.gif" width="600px" /></p>
 
+It can also be used to compare two tree-based formats in an interactive TUI or output the diff to another file.
+
+<img alt="example" src="./assets/diff.gif" width="600px" /></p>
 
 ## Installation
 

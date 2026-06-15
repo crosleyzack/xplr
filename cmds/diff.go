@@ -12,10 +12,10 @@ import (
 
 // NOTE: current limitation of this is it will not show items in
 // tree2 that are not in tree1, as it only does a single dfs over tree1
+// TODO: fix the above, and make this work with N trees
 func NewDiffCmd() *cobra.Command {
-	var files []string
+	var files, keys []string
 	var output string
-	var key1, key2 string
 	var nilValue string
 	cmd := &cobra.Command{
 		Use:     "diff []",
@@ -31,7 +31,6 @@ func NewDiffCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
-
 			d1, err := getData(getSafe(args, 0), getSafe(files, 0))
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
@@ -40,6 +39,13 @@ func NewDiffCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
+
+			// get keys
+			if len(keys) != 2 {
+				return fmt.Errorf("two keys required, got %d", len(keys))
+			}
+			key1 := keys[0]
+			key2 := keys[1]
 
 			// get data as map[string]any
 			m1, err := format.Parse(d1)
@@ -98,8 +104,8 @@ func NewDiffCmd() *cobra.Command {
 	}
 	cmd.Flags().StringSliceVarP(&files, "file", "f", nil, "files to read data from")
 	cmd.Flags().StringVarP(&output, "out", "o", "", "what to output the diff to (defaults to tree display)")
-	cmd.Flags().StringVar(&key1, "key1", "_f1", "what to put as key in tree to denote this is from tree1")
-	cmd.Flags().StringVar(&key2, "key2", "_f2", "what to put as key in tree to denote this is from tree2")
+
+	cmd.Flags().StringSliceVarP(&keys, "key", "k", []string{"_f1", "_f2"}, "what to put as key in tree to denote this is from tree1")
 	cmd.Flags().StringVar(&nilValue, "nilValue", "nil", "what to use as value for missing nodes in one tree")
 	return cmd
 }
@@ -278,8 +284,11 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 		// no matching root node found - add subtree to root tree
 		tree = append(tree, subtree...)
 	} else {
-		// found a node partway through path - attach subtree to it
+		// found a node partway through path - attach subtree to it and wire parents
 		current.Children = append(current.Children, subtree...)
+		for _, s := range subtree {
+			s.Parent = current
+		}
 	}
 
 	// get node from end of subtree and attach n
