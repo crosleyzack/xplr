@@ -57,13 +57,7 @@ func (m *Model) renderTree() (string, error) {
 		if idx < minRow || idx > maxRow {
 			return nil // Skip nodes outside the display range
 		}
-		s := make([]lipgloss.Style, 0)
-		for key, style := range m.Styles.KeyBasedStyles {
-			if nodes.GetAncestor(node, key) != nil {
-				s = append(s, style)
-			}
-		}
-		str := m.getLine(node, layer, idx, s...)
+		str := m.getLine(node, layer, idx)
 		if len(str) > 0 {
 			b.WriteString(str)
 		}
@@ -149,21 +143,29 @@ func (m *Model) nodeRenderer(node *nodes.Node, index, availableChars int) string
 		// if we have more runes than terminal width, truncate
 		valueStr = valueStr[:availableChars-1] + "…"
 	}
+	// get an additional base style if needed
+	baseStyle := lipgloss.Style{}
+	for key, ks := range m.Styles.KeyBasedStyles {
+		if nodes.GetAncestor(node, key) != nil {
+			baseStyle = ks
+			break
+		}
+	}
 	// If we are at the cursor, we add the selected style to the string
-	styledKey := ""
-	styledValue := ""
+	var keyStyle, valueStyle lipgloss.Style
 	switch {
 	case m.cursor == index:
 		m.currentNode = node
-		styledKey = m.Styles.Selected.Render(keyStr)
-		styledValue = m.Styles.Selected.Render(valueStr)
+		keyStyle = m.Styles.Selected.Inherit(baseStyle)
+		valueStyle = m.Styles.Selected.Inherit(baseStyle)
 	default:
-		styledKey = m.Styles.Unselected.Render(keyStr)
-		styledValue = m.Styles.Unselected.Render(valueStr)
+		keyStyle = m.Styles.Unselected.Inherit(baseStyle)
+		valueStyle = m.Styles.Unselected.Inherit(baseStyle)
 	}
-	str := styledKey
+	str := keyStyle.Render(keyStr)
 	if !node.Expand || !m.hideSummaryWhenExpanded {
-		str += strings.Repeat(" ", spacesNeeded) + styledValue
+		str += baseStyle.Render(strings.Repeat(" ", spacesNeeded))
+		str += valueStyle.Render(valueStr)
 	}
 	return str
 }
