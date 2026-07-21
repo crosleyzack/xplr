@@ -1,9 +1,9 @@
 package nodes
 
 import (
-	"sort"
 	"testing"
 
+	"github.com/crosleyzack/xplr/pkg/omap"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,18 +42,17 @@ func TestMakeNode(t *testing.T) {
 			name:  "array value",
 			key:   "array",
 			value: []any{"a", "b", "c"},
-			expected: Node{Key: "array", Value: "a b c", Expand: true, Children: []*Node{
-				{Key: "0", Value: "a", Expand: true},
-				{Key: "1", Value: "b", Expand: true},
-				{Key: "2", Value: "c", Expand: true},
-			}},
+			expected: Node{Key: "array", Value: "a b c", Expand: true, Children: childMap(
+				&Node{Key: "0", Value: "a", Expand: true},
+				&Node{Key: "1", Value: "b", Expand: true},
+				&Node{Key: "2", Value: "c", Expand: true},
+			)},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			node := NewNode(tt.key, tt.value, 0, 2, LeafValuesOnly)
-			sort.Slice(node.Children, sortNodes(node.Children))
 			assert.True(t, compareNodes(node, &tt.expected))
 		})
 	}
@@ -91,21 +90,21 @@ func TestNew(t *testing.T) {
 					Key:    "mixed",
 					Value:  "a 1 true",
 					Expand: true,
-					Children: []*Node{
-						{Key: "0", Value: "a", Expand: true},
-						{Key: "1", Value: "1", Expand: true},
-						{Key: "2", Value: "true", Expand: true},
-					},
+					Children: childMap(
+						&Node{Key: "0", Value: "a", Expand: true},
+						&Node{Key: "1", Value: "1", Expand: true},
+						&Node{Key: "2", Value: "true", Expand: true},
+					),
 				},
 				{
 					Key:    "numbers",
 					Value:  "1 2 3",
 					Expand: true,
-					Children: []*Node{
-						{Key: "0", Value: "1", Expand: true},
-						{Key: "1", Value: "2", Expand: true},
-						{Key: "2", Value: "3", Expand: true},
-					},
+					Children: childMap(
+						&Node{Key: "0", Value: "1", Expand: true},
+						&Node{Key: "1", Value: "2", Expand: true},
+						&Node{Key: "2", Value: "3", Expand: true},
+					),
 				},
 			},
 		},
@@ -119,7 +118,6 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := New(tt.input, 2, LeafValuesOnly)
-			sort.Slice(result, sortNodes(result))
 			if len(result) != len(tt.expected) {
 				t.Errorf("New() returned %d nodes, want %d", len(result), len(tt.expected))
 				return
@@ -159,10 +157,10 @@ func TestToMap(t *testing.T) {
 			nodes: []*Node{
 				{
 					Key: "person",
-					Children: []*Node{
-						{Key: "name", Value: "alice"},
-						{Key: "age", Value: "30"},
-					},
+					Children: childMap(
+						&Node{Key: "name", Value: "alice"},
+						&Node{Key: "age", Value: "30"},
+					),
 				},
 			},
 			expected: map[string]any{
@@ -184,12 +182,19 @@ func TestToMap(t *testing.T) {
 	}
 }
 
-func sortNodes(nodes []*Node) func(i, j int) bool {
-	return func(i, j int) bool { return nodes[i].Key < nodes[j].Key }
+// childMap builds a Children map keyed by each node's Key, matching how the
+// package stores children internally.
+func childMap(children ...*Node) omap.OMap[string, *Node] {
+	m := omap.New[string, *Node]()
+	for _, c := range children {
+		m.Put(c.Key, c)
+	}
+	return m
 }
 
 // compareNodes compares two nodes for equality, including their children.
-// ignores keys
+// ignores ID and Parent so nodes built by NewNode (which assigns random IDs)
+// can be compared against literal expectations.
 func compareNodes(a, b *Node) bool {
 	if a == nil || b == nil {
 		return a == b
@@ -197,11 +202,12 @@ func compareNodes(a, b *Node) bool {
 	if a.Key != b.Key || a.Value != b.Value || a.Expand != b.Expand {
 		return false
 	}
-	if len(a.Children) != len(b.Children) {
+	if a.Children.Len() != b.Children.Len() {
 		return false
 	}
-	for i := range a.Children {
-		if !compareNodes(a.Children[i], b.Children[i]) {
+	for _, child := range a.Children.Arr() {
+		other, ok := b.Children.Get(child.Key)
+		if !ok || !compareNodes(child, other) {
 			return false
 		}
 	}
@@ -217,38 +223,38 @@ func TestIsArray(t *testing.T) {
 		{
 			name: "numeric keys array",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "first"},
-					{Key: "1", Value: "second"},
-					{Key: "2", Value: "third"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "first"},
+					&Node{Key: "1", Value: "second"},
+					&Node{Key: "2", Value: "third"},
+				),
 			},
 			expected: true,
 		},
 		{
 			name: "mixed keys not array",
 			node: &Node{
-				Children: []*Node{
-					{Key: "name", Value: "John"},
-					{Key: "age", Value: "30"},
-				},
+				Children: childMap(
+					&Node{Key: "name", Value: "John"},
+					&Node{Key: "age", Value: "30"},
+				),
 			},
 			expected: false,
 		},
 		{
 			name: "non-sequential numeric keys still array",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "first"},
-					{Key: "2", Value: "third"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "first"},
+					&Node{Key: "2", Value: "third"},
+				),
 			},
 			expected: true,
 		},
 		{
 			name: "empty children not array",
 			node: &Node{
-				Children: []*Node{},
+				Children: childMap(),
 			},
 			expected: false,
 		},
@@ -262,10 +268,10 @@ func TestIsArray(t *testing.T) {
 		{
 			name: "mixed numeric and string keys not array",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "first"},
-					{Key: "name", Value: "test"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "first"},
+					&Node{Key: "name", Value: "test"},
+				),
 			},
 			expected: false,
 		},

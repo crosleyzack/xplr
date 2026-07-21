@@ -74,13 +74,13 @@ func leafValuesWithBracketsHelper(n *Node, includeKey bool) string {
 	if includeKey {
 		b.WriteString(n.Key)
 	}
-	if len(n.Children) > 0 {
+	if n.Children.Len() > 0 {
 		if includeKey {
 			b.WriteString(": ")
 		}
 		b.WriteString("{")
 		first := true
-		for _, child := range n.Children {
+		for _, child := range n.Children.Iter() {
 			b.WriteString(spacerToken(first))
 			b.WriteString(leafValuesWithBracketsHelper(child, true))
 			first = false
@@ -99,9 +99,9 @@ func leafValuesWithBracketsHelper(n *Node, includeKey bool) string {
 // LeafValuesOnly represents a node as the sequence of children leaf values only
 func LeafValuesOnly(n *Node) string {
 	var b strings.Builder
-	if len(n.Children) > 0 {
+	if n.Children.Len() > 0 {
 		first := true
-		for _, child := range n.Children {
+		for _, child := range n.Children.Iter() {
 			b.WriteString(spacerToken(first))
 			b.WriteString(LeafValuesOnly(child))
 			first = false
@@ -115,9 +115,9 @@ func LeafValuesOnly(n *Node) string {
 // LeafKeyAndValues represents a node by its leaf node Key and Value
 func LeafKeyAndValues(n *Node) string {
 	var b strings.Builder
-	if len(n.Children) > 0 {
+	if n.Children.Len() > 0 {
 		first := true
-		for _, child := range n.Children {
+		for _, child := range n.Children.Iter() {
 			b.WriteString(spacerToken(first))
 			b.WriteString(LeafKeyAndValues(child))
 			first = false
@@ -133,11 +133,11 @@ func LeafKeyAndValues(n *Node) string {
 // DirectChildrenKeys represents a node as the keys of its direct children
 func DirectChildrenKeys(n *Node) string {
 	var b strings.Builder
-	if len(n.Children) > 0 {
+	if n.Children.Len() > 0 {
 		first := true
-		for _, child := range n.Children {
+		for key := range n.Children.Keys() {
 			b.WriteString(spacerToken(first))
-			b.WriteString(child.Key)
+			b.WriteString(key)
 			first = false
 		}
 	} else {
@@ -149,13 +149,12 @@ func DirectChildrenKeys(n *Node) string {
 // KeyCountOnly represents a node showing only the count of keys/items
 func KeyCountOnly(n *Node) string {
 	var b strings.Builder
-
-	if len(n.Children) > 0 {
+	if count := n.Children.Len(); count > 0 {
 		var metadata string
 		if IsArray(n) {
-			metadata = fmt.Sprintf("(%d items)", len(n.Children))
+			metadata = fmt.Sprintf("(%d items)", count)
 		} else {
-			metadata = fmt.Sprintf("(%d keys)", len(n.Children))
+			metadata = fmt.Sprintf("(%d keys)", count)
 		}
 
 		b.WriteString(MetadataPrefix)
@@ -168,16 +167,16 @@ func KeyCountOnly(n *Node) string {
 // KeyNamesWithTypes represents a node showing key names with their types
 func KeyNamesWithTypes(n *Node) string {
 	var b strings.Builder
-	if len(n.Children) > 0 {
+	if count := n.Children.Len(); count > 0 {
 		var metadata string
 		if IsArray(n) {
 			arrayType := getArrayElementTypes(n)
 			metadata = fmt.Sprintf("(%s)", arrayType)
 		} else {
-			keyDetails := make([]string, 0, len(n.Children))
-			for _, child := range n.Children {
+			keyDetails := make([]string, 0, count)
+			for key, child := range n.Children.Iter() {
 				childType := getJSONType(child)
-				keyDetails = append(keyDetails, fmt.Sprintf("%s:%s", child.Key, childType))
+				keyDetails = append(keyDetails, fmt.Sprintf("%s:%s", key, childType))
 			}
 			metadata = fmt.Sprintf("(%s)", strings.Join(keyDetails, ", "))
 		}
@@ -192,18 +191,18 @@ func KeyNamesWithTypes(n *Node) string {
 // KeyCountAndTypes represents a node showing both count and key names with types
 func KeyCountAndTypes(n *Node) string {
 	var b strings.Builder
-	if len(n.Children) > 0 {
+	if count := n.Children.Len(); count > 0 {
 		var metadata string
 		if IsArray(n) {
 			arrayType := getArrayElementTypes(n)
-			metadata = fmt.Sprintf("(%d items: %s)", len(n.Children), arrayType)
+			metadata = fmt.Sprintf("(%d items: %s)", count, arrayType)
 		} else {
-			keyDetails := make([]string, 0, len(n.Children))
-			for _, child := range n.Children {
+			keyDetails := make([]string, 0, count)
+			for key, child := range n.Children.Iter() {
 				childType := getJSONType(child)
-				keyDetails = append(keyDetails, fmt.Sprintf("%s:%s", child.Key, childType))
+				keyDetails = append(keyDetails, fmt.Sprintf("%s:%s", key, childType))
 			}
-			metadata = fmt.Sprintf("(%d keys: %s)", len(n.Children), strings.Join(keyDetails, ", "))
+			metadata = fmt.Sprintf("(%d keys: %s)", count, strings.Join(keyDetails, ", "))
 		}
 
 		b.WriteString(MetadataPrefix)
@@ -214,15 +213,15 @@ func KeyCountAndTypes(n *Node) string {
 }
 
 // getJSONType determines the JSON type of a node's value
-func getJSONType(node *Node) string {
-	if len(node.Children) > 0 {
-		if IsArray(node) {
+func getJSONType(n *Node) string {
+	if n.Children.Len() > 0 {
+		if IsArray(n) {
 			return "array"
 		}
 		return "object"
 	}
 
-	value := node.Value
+	value := n.Value
 	if value == "" {
 		return "null"
 	}
@@ -239,14 +238,14 @@ func getJSONType(node *Node) string {
 }
 
 // getArrayElementTypes analyzes array elements and returns a descriptive type string
-func getArrayElementTypes(node *Node) string {
-	if !IsArray(node) || IsLeaf(node) {
+func getArrayElementTypes(n *Node) string {
+	if !IsArray(n) || IsLeaf(n) {
 		return "array"
 	}
 
 	// Count types of all elements
 	typeCounts := make(map[string]int)
-	for _, child := range node.Children {
+	for _, child := range n.Children.Iter() {
 		childType := getJSONType(child)
 		typeCounts[childType]++
 	}

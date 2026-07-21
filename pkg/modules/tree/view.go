@@ -15,13 +15,10 @@ func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
 		return 0
 	}
 
-	var siblings []*nodes.Node
-	if node.Parent == nil {
+	siblings := nodes.Siblings(node)
+	if len(siblings) == 0 {
 		// For root level nodes, siblings are all root nodes
 		siblings = rootNodes
-	} else {
-		// For other nodes, siblings are parent's children
-		siblings = node.Parent.Children
 	}
 
 	maxWidth := 0
@@ -142,7 +139,7 @@ func (m *Model) nodeRenderer(node *nodes.Node, index, availableChars int) string
 	// get an additional base style if needed
 	baseStyle := lipgloss.Style{}
 	for key, ks := range m.Styles.KeyBasedStyles {
-		if nodes.GetAncestor(node, key) != nil {
+		if nodes.Ancestor(node, key) != nil {
 			baseStyle = ks
 			break
 		}

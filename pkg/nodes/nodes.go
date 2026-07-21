@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/crosleyzack/xplr/pkg/omap"
 	"github.com/google/uuid"
 )
 
@@ -15,8 +16,9 @@ type Node struct {
 	Key string
 	// Value is used to store the string representation of the value
 	Value string
-	// Children is the list of children nodes
-	Children []*Node
+	// Children is the set of child nodes, keyed by node key and kept in
+	// sorted key order.
+	Children omap.OMap[string, *Node]
 	// Parent of this node
 	Parent *Node
 	// Expand indicates if the node is expanded
@@ -28,17 +30,16 @@ func (n *Node) Equal(other *Node) bool {
 	return n.ID == other.ID
 }
 
-func GetChild(n *Node, key string) *Node {
-	for _, child := range n.Children {
-		if child.Key == key {
-			return child
-		}
+// Child get child node with given key
+func Child(n *Node, key string) *Node {
+	if child, ok := n.Children.Get(key); ok {
+		return child
 	}
 	return nil
 }
 
-// GetAncestor for a given node by key identifier
-func GetAncestor(n *Node, key string) *Node {
+// Ancestor for a given node by key identifier
+func Ancestor(n *Node, key string) *Node {
 	for {
 		if n.Key == key {
 			return n
@@ -50,9 +51,18 @@ func GetAncestor(n *Node, key string) *Node {
 	}
 }
 
+// Siblings get nodes with the same parent as this node
+func Siblings(n *Node) []*Node {
+	if n == nil || n.Parent == nil {
+		return nil
+	}
+
+	return n.Children.Arr()
+}
+
 // IsLeaf returns true if the node is a leaf node (has no children)
 func IsLeaf(n *Node) bool {
-	return len(n.Children) == 0
+	return n.Children.Len() == 0
 }
 
 // ToMap converts a node back to a map[string]any, which can be used to convert back to JSON
@@ -63,7 +73,7 @@ func ToMap(n []*Node) map[string]any {
 			m[n.Key] = n.Value
 			continue
 		}
-		m[n.Key] = ToMap(n.Children)
+		m[n.Key] = ToMap(n.Children.Arr())
 	}
 	return m
 }
@@ -81,18 +91,21 @@ func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode
 		nodes = append(nodes, node)
 	}
 	slices.SortFunc(nodes, func(a, b *Node) int {
+		// NOTE: limitation of this is if the keys are all
+		// string numbers (IE "1", "2", ...) this will not
+		// order correctly.
 		return strings.Compare(a.Key, b.Key)
 	})
 	return nodes
 }
 
 // IsArray checks if a node represents an array (all children have numeric keys)
-func IsArray(node *Node) bool {
-	if IsLeaf(node) {
+func IsArray(n *Node) bool {
+	if IsLeaf(n) {
 		return false
 	}
-	for _, child := range node.Children {
-		if _, err := strconv.Atoi(child.Key); err != nil {
+	for key := range n.Children.Keys() {
+		if _, err := strconv.Atoi(key); err != nil {
 			return false
 		}
 	}
@@ -101,12 +114,12 @@ func IsArray(node *Node) bool {
 
 // IsLeafArray checks if a node represents an array (all children have numeric keys)
 // and all children are leaf nodes
-func IsLeafArray(node *Node) bool {
-	if IsLeaf(node) {
+func IsLeafArray(n *Node) bool {
+	if IsLeaf(n) {
 		return false
 	}
-	for _, child := range node.Children {
-		if _, err := strconv.Atoi(child.Key); err != nil {
+	for key, child := range n.Children.Iter() {
+		if _, err := strconv.Atoi(key); err != nil {
 			return false
 		}
 		if !IsLeaf(child) {
@@ -133,20 +146,22 @@ func NewNode(key string, value any, layer uint, displayLayers uint, repr ReprNod
 	case bool:
 		node.Value = strconv.FormatBool(v)
 	case []any:
-		node.Children = make([]*Node, 0, len(v))
+		node.Children = omap.New[string, *Node]()
 		for i, child := range v {
-			childNode := NewNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers, repr)
-			childNode.Parent = node
-			node.Children = append(node.Children, childNode)
+			n := NewNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers, repr)
+			n.Parent = node
+			node.Children.Put(n.Key, n)
 		}
 		node.Value = "[]"
 		if len(v) > 0 {
 			node.Value = repr(node)
 		}
 	case map[string]any:
-		node.Children = makeTree(v, layer+1, displayLayers, repr)
-		for _, n := range node.Children {
+		node.Children = omap.New[string, *Node]()
+		tree := makeTree(v, layer+1, displayLayers, repr)
+		for _, n := range tree {
 			n.Parent = node
+			node.Children.Put(n.Key, n)
 		}
 		node.Value = "{}"
 		if len(v) > 0 {

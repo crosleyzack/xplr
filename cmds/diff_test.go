@@ -15,7 +15,11 @@ func TestCompareNodes(t *testing.T) {
 		return &nodes.Node{ID: uuid.New(), Key: key, Value: value}
 	}
 	nonLeaf := func(key string, children ...*nodes.Node) *nodes.Node {
-		return &nodes.Node{ID: uuid.New(), Key: key, Children: children}
+		n := &nodes.Node{ID: uuid.New(), Key: key}
+		for _, c := range children {
+			n.Children.Put(c.Key, c)
+		}
+		return n
 	}
 	leafArray := func(key string) *nodes.Node {
 		return nonLeaf(key, leaf("0", "a"), leaf("1", "b"))
