@@ -37,7 +37,7 @@ func dfs(nodes []*Node, f func(*Node, int) error, conf *searchConfig, layer int)
 		}
 		next := conf.NextNodes(node)
 		if len(next) > 0 {
-			if err := dfs(node.Children, f, conf, layer+1); err != nil {
+			if err := dfs(next, f, conf, layer+1); err != nil {
 				return err
 			}
 		}
@@ -72,12 +72,12 @@ func DFSIter(nodes []*Node, f func(*Node) bool, opts ...DFSOption) func(func(*No
 }
 
 func AllChildren(n *Node) []*Node {
-	return n.Children
+	return n.Children.Arr()
 }
 
 func ObeyExpand(n *Node) []*Node {
 	if n.Expand {
-		return n.Children
+		return n.Children.Arr()
 	}
 	return nil
 }

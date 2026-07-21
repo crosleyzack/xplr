@@ -23,10 +23,10 @@ func TestLeafValuesWithBrackets(t *testing.T) {
 			name: "node with children",
 			node: &Node{
 				Key: "parent",
-				Children: []*Node{
-					{Key: "child1", Value: "value1"},
-					{Key: "child2", Value: "value2"},
-				},
+				Children: childMap(
+					&Node{Key: "child1", Value: "value1"},
+					&Node{Key: "child2", Value: "value2"},
+				),
 			},
 			expected: "{child1: value1 child2: value2}",
 		},
@@ -34,14 +34,14 @@ func TestLeafValuesWithBrackets(t *testing.T) {
 			name: "nested children",
 			node: &Node{
 				Key: "root",
-				Children: []*Node{
-					{
+				Children: childMap(
+					&Node{
 						Key: "level1",
-						Children: []*Node{
-							{Key: "level2", Value: "value"},
-						},
+						Children: childMap(
+							&Node{Key: "level2", Value: "value"},
+						),
 					},
-				},
+				),
 			},
 			expected: "{level1: {level2: value}}",
 		},
@@ -49,7 +49,7 @@ func TestLeafValuesWithBrackets(t *testing.T) {
 			name: "empty children",
 			node: &Node{
 				Key:      "empty",
-				Children: []*Node{},
+				Children: childMap(),
 			},
 			expected: "",
 		},
@@ -91,41 +91,42 @@ func TestLeafValuesOnly(t *testing.T) {
 			name: "node with leaf children",
 			node: &Node{
 				Key: "parent",
-				Children: []*Node{
-					{Key: "child1", Value: "value1"},
-					{Key: "child2", Value: "value2"},
-				},
+				Children: childMap(
+					&Node{Key: "child1", Value: "value1"},
+					&Node{Key: "child2", Value: "value2"},
+				),
 			},
 			expected: "value1 value2",
 		},
 		{
+			// children render in key order: "leaf" before "nonleaf".
 			name: "mixed leaf and non-leaf children",
 			node: &Node{
 				Key: "root",
-				Children: []*Node{
-					{
+				Children: childMap(
+					&Node{
 						Key: "nonleaf",
-						Children: []*Node{
-							{Key: "nested", Value: "value"},
-						},
+						Children: childMap(
+							&Node{Key: "nested", Value: "value"},
+						),
 					},
-					{Key: "leaf", Value: "leafvalue"},
-				},
+					&Node{Key: "leaf", Value: "leafvalue"},
+				),
 			},
-			expected: "value leafvalue",
+			expected: "leafvalue value",
 		},
 		{
 			name: "no leaf children",
 			node: &Node{
 				Key: "root",
-				Children: []*Node{
-					{
+				Children: childMap(
+					&Node{
 						Key: "level1",
-						Children: []*Node{
-							{Key: "level2", Children: []*Node{}},
-						},
+						Children: childMap(
+							&Node{Key: "level2", Children: childMap()},
+						),
 					},
-				},
+				),
 			},
 			expected: "",
 		},
@@ -159,10 +160,10 @@ func TestKeyCountOnly(t *testing.T) {
 			name: "simple object with children",
 			node: &Node{
 				Key: "user",
-				Children: []*Node{
-					{Key: "name", Value: "John"},
-					{Key: "age", Value: "30"},
-				},
+				Children: childMap(
+					&Node{Key: "name", Value: "John"},
+					&Node{Key: "age", Value: "30"},
+				),
 			},
 			expected: MetadataPrefix + "(2 keys)",
 		},
@@ -170,11 +171,11 @@ func TestKeyCountOnly(t *testing.T) {
 			name: "array with items",
 			node: &Node{
 				Key: "items",
-				Children: []*Node{
-					{Key: "0", Value: "first"},
-					{Key: "1", Value: "second"},
-					{Key: "2", Value: "third"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "first"},
+					&Node{Key: "1", Value: "second"},
+					&Node{Key: "2", Value: "third"},
+				),
 			},
 			expected: MetadataPrefix + "(3 items)",
 		},
@@ -190,7 +191,7 @@ func TestKeyCountOnly(t *testing.T) {
 			name: "empty children array",
 			node: &Node{
 				Key:      "empty",
-				Children: []*Node{},
+				Children: childMap(),
 			},
 			expected: "",
 		},
@@ -213,26 +214,27 @@ func TestKeyNamesWithTypes(t *testing.T) {
 		expected string
 	}{
 		{
+			// keys render in order: active, age, name.
 			name: "object with mixed types",
 			node: &Node{
 				Key: "user",
-				Children: []*Node{
-					{Key: "name", Value: "John"},
-					{Key: "age", Value: "30"},
-					{Key: "active", Value: "true"},
-				},
+				Children: childMap(
+					&Node{Key: "name", Value: "John"},
+					&Node{Key: "age", Value: "30"},
+					&Node{Key: "active", Value: "true"},
+				),
 			},
-			expected: MetadataPrefix + "(name:string, age:integer, active:boolean)",
+			expected: MetadataPrefix + "(active:boolean, age:integer, name:string)",
 		},
 		{
 			name: "array of strings",
 			node: &Node{
 				Key: "colors",
-				Children: []*Node{
-					{Key: "0", Value: "red"},
-					{Key: "1", Value: "blue"},
-					{Key: "2", Value: "green"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "red"},
+					&Node{Key: "1", Value: "blue"},
+					&Node{Key: "2", Value: "green"},
+				),
 			},
 			expected: MetadataPrefix + "(array of strings)",
 		},
@@ -240,11 +242,11 @@ func TestKeyNamesWithTypes(t *testing.T) {
 			name: "array of numbers",
 			node: &Node{
 				Key: "scores",
-				Children: []*Node{
-					{Key: "0", Value: "95"},
-					{Key: "1", Value: "87"},
-					{Key: "2", Value: "92"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "95"},
+					&Node{Key: "1", Value: "87"},
+					&Node{Key: "2", Value: "92"},
+				),
 			},
 			expected: MetadataPrefix + "(array of numbers)",
 		},
@@ -252,11 +254,11 @@ func TestKeyNamesWithTypes(t *testing.T) {
 			name: "array of mixed types",
 			node: &Node{
 				Key: "mixed",
-				Children: []*Node{
-					{Key: "0", Value: "text"},
-					{Key: "1", Value: "42"},
-					{Key: "2", Value: "true"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "text"},
+					&Node{Key: "1", Value: "42"},
+					&Node{Key: "2", Value: "true"},
+				),
 			},
 			expected: MetadataPrefix + "(array)",
 		},
@@ -264,10 +266,10 @@ func TestKeyNamesWithTypes(t *testing.T) {
 			name: "object with nested objects",
 			node: &Node{
 				Key: "data",
-				Children: []*Node{
-					{Key: "config", Children: []*Node{{Key: "debug", Value: "false"}}},
-					{Key: "items", Children: []*Node{{Key: "0", Value: "item1"}}},
-				},
+				Children: childMap(
+					&Node{Key: "config", Children: childMap(&Node{Key: "debug", Value: "false"})},
+					&Node{Key: "items", Children: childMap(&Node{Key: "0", Value: "item1"})},
+				),
 			},
 			expected: MetadataPrefix + "(config:object, items:array)",
 		},
@@ -298,24 +300,25 @@ func TestKeyCountAndTypes(t *testing.T) {
 		expected string
 	}{
 		{
+			// keys render in order: age, name.
 			name: "object with mixed types",
 			node: &Node{
 				Key: "user",
-				Children: []*Node{
-					{Key: "name", Value: "John"},
-					{Key: "age", Value: "30"},
-				},
+				Children: childMap(
+					&Node{Key: "name", Value: "John"},
+					&Node{Key: "age", Value: "30"},
+				),
 			},
-			expected: MetadataPrefix + "(2 keys: name:string, age:integer)",
+			expected: MetadataPrefix + "(2 keys: age:integer, name:string)",
 		},
 		{
 			name: "array of strings",
 			node: &Node{
 				Key: "tags",
-				Children: []*Node{
-					{Key: "0", Value: "work"},
-					{Key: "1", Value: "personal"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "work"},
+					&Node{Key: "1", Value: "personal"},
+				),
 			},
 			expected: MetadataPrefix + "(2 items: array of strings)",
 		},
@@ -323,9 +326,9 @@ func TestKeyCountAndTypes(t *testing.T) {
 			name: "single item array",
 			node: &Node{
 				Key: "single",
-				Children: []*Node{
-					{Key: "0", Value: "42"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "42"},
+				),
 			},
 			expected: MetadataPrefix + "(1 items: array of numbers)",
 		},
@@ -356,26 +359,27 @@ func TestDirectChildrenKeys(t *testing.T) {
 		expected string
 	}{
 		{
+			// keys render in order: active, age, name.
 			name: "object with children",
 			node: &Node{
 				Key: "user",
-				Children: []*Node{
-					{Key: "name", Value: "John"},
-					{Key: "age", Value: "30"},
-					{Key: "active", Value: "true"},
-				},
+				Children: childMap(
+					&Node{Key: "name", Value: "John"},
+					&Node{Key: "age", Value: "30"},
+					&Node{Key: "active", Value: "true"},
+				),
 			},
-			expected: "name age active",
+			expected: "active age name",
 		},
 		{
 			name: "array with items",
 			node: &Node{
 				Key: "items",
-				Children: []*Node{
-					{Key: "0", Value: "first"},
-					{Key: "1", Value: "second"},
-					{Key: "2", Value: "third"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "first"},
+					&Node{Key: "1", Value: "second"},
+					&Node{Key: "2", Value: "third"},
+				),
 			},
 			expected: "0 1 2",
 		},
@@ -383,9 +387,9 @@ func TestDirectChildrenKeys(t *testing.T) {
 			name: "single child",
 			node: &Node{
 				Key: "parent",
-				Children: []*Node{
-					{Key: "only_child", Value: "value"},
-				},
+				Children: childMap(
+					&Node{Key: "only_child", Value: "value"},
+				),
 			},
 			expected: "only_child",
 		},
@@ -401,7 +405,7 @@ func TestDirectChildrenKeys(t *testing.T) {
 			name: "empty children array",
 			node: &Node{
 				Key:      "empty",
-				Children: []*Node{},
+				Children: childMap(),
 			},
 			expected: "{}",
 		},
@@ -457,7 +461,7 @@ func TestGetJSONType(t *testing.T) {
 			name: "object with children",
 			node: &Node{
 				Key:      "test",
-				Children: []*Node{{Key: "child", Value: "value"}},
+				Children: childMap(&Node{Key: "child", Value: "value"}),
 			},
 			expected: "object",
 		},
@@ -465,10 +469,10 @@ func TestGetJSONType(t *testing.T) {
 			name: "array with numeric keys",
 			node: &Node{
 				Key: "test",
-				Children: []*Node{
-					{Key: "0", Value: "first"},
-					{Key: "1", Value: "second"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "first"},
+					&Node{Key: "1", Value: "second"},
+				),
 			},
 			expected: "array",
 		},
@@ -493,59 +497,59 @@ func TestGetArrayElementTypes(t *testing.T) {
 		{
 			name: "array of strings",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "hello"},
-					{Key: "1", Value: "world"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "hello"},
+					&Node{Key: "1", Value: "world"},
+				),
 			},
 			expected: "array of strings",
 		},
 		{
 			name: "array of integers",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "1"},
-					{Key: "1", Value: "2"},
-					{Key: "2", Value: "3"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "1"},
+					&Node{Key: "1", Value: "2"},
+					&Node{Key: "2", Value: "3"},
+				),
 			},
 			expected: "array of numbers",
 		},
 		{
 			name: "array of floats",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "1.5"},
-					{Key: "1", Value: "2.7"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "1.5"},
+					&Node{Key: "1", Value: "2.7"},
+				),
 			},
 			expected: "array of numbers",
 		},
 		{
 			name: "mixed type array",
 			node: &Node{
-				Children: []*Node{
-					{Key: "0", Value: "hello"},
-					{Key: "1", Value: "42"},
-					{Key: "2", Value: "true"},
-				},
+				Children: childMap(
+					&Node{Key: "0", Value: "hello"},
+					&Node{Key: "1", Value: "42"},
+					&Node{Key: "2", Value: "true"},
+				),
 			},
 			expected: "array",
 		},
 		{
 			name: "not an array",
 			node: &Node{
-				Children: []*Node{
-					{Key: "name", Value: "John"},
-					{Key: "age", Value: "30"},
-				},
+				Children: childMap(
+					&Node{Key: "name", Value: "John"},
+					&Node{Key: "age", Value: "30"},
+				),
 			},
 			expected: "array",
 		},
 		{
 			name: "empty array",
 			node: &Node{
-				Children: []*Node{},
+				Children: childMap(),
 			},
 			expected: "array",
 		},
@@ -579,9 +583,9 @@ func TestGetRepr(t *testing.T) {
 	// Create a test node
 	testNode := &Node{
 		Key: "test",
-		Children: []*Node{
-			{Key: "child", Value: "value"},
-		},
+		Children: childMap(
+			&Node{Key: "child", Value: "value"},
+		),
 	}
 
 	for _, tt := range tests {
@@ -632,5 +636,4 @@ func TestTruncateIfNeeded(t *testing.T) {
 			}
 		})
 	}
-
 }

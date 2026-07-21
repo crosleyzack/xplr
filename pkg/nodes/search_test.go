@@ -9,33 +9,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// testSearchTree builds the standard test tree used across search tests:
+// testSearchTree builds the standard test tree used across search tests.
+// Children iterate in key order, so "bad" is visited before "bar".
 //
 //	foo (expand)
-//	  bar (expand)
-//	    baz
 //	  bad (collapsed)
 //	    unreached
+//	  bar (expand)
+//	    baz
 func testSearchTree() *Node {
 	return &Node{
 		Key:    "foo",
 		Expand: true,
-		Children: []*Node{
-			{
-				Key:    "bar",
-				Expand: true,
-				Children: []*Node{
-					{Key: "baz"},
-				},
+		Children: childMap(
+			&Node{
+				Key:      "bar",
+				Expand:   true,
+				Children: childMap(&Node{Key: "baz"}),
 			},
-			{
-				Key:    "bad",
-				Expand: false,
-				Children: []*Node{
-					{Key: "unreached"},
-				},
+			&Node{
+				Key:      "bad",
+				Expand:   false,
+				Children: childMap(&Node{Key: "unreached"}),
 			},
-		},
+		),
 	}
 }
 
@@ -48,13 +45,13 @@ func TestDFS(t *testing.T) {
 	}{
 		{
 			name:       "default ObeyExpand skips collapsed children",
-			wantKeys:   []string{"foo", "bar", "baz", "bad"},
-			wantLayers: []int{0, 1, 2, 1},
+			wantKeys:   []string{"foo", "bad", "bar", "baz"},
+			wantLayers: []int{0, 1, 1, 2},
 		},
 		{
 			name:       "AllChildren visits all nodes",
 			opts:       []DFSOption{WithNextNodes(AllChildren)},
-			wantKeys:   []string{"foo", "bar", "baz", "bad", "unreached"},
+			wantKeys:   []string{"foo", "bad", "unreached", "bar", "baz"},
 			wantLayers: []int{0, 1, 2, 1, 2},
 		},
 	}
@@ -85,7 +82,7 @@ func TestDFSError(t *testing.T) {
 		return nil
 	})
 	assert.ErrorIs(t, err, sentinel)
-	assert.Equal(t, []string{"foo", "bar"}, visited)
+	assert.Equal(t, []string{"foo", "bad", "bar"}, visited)
 }
 
 func TestDFSIter(t *testing.T) {
@@ -98,18 +95,18 @@ func TestDFSIter(t *testing.T) {
 		{
 			name:     "ObeyExpand",
 			filter:   func(*Node) bool { return true },
-			wantKeys: []string{"foo", "bar", "baz", "bad"},
+			wantKeys: []string{"foo", "bad", "bar", "baz"},
 		},
 		{
 			name:     "match all with AllChildren",
 			filter:   func(*Node) bool { return true },
 			opts:     []DFSOption{WithNextNodes(AllChildren)},
-			wantKeys: []string{"foo", "bar", "baz", "bad", "unreached"},
+			wantKeys: []string{"foo", "bad", "unreached", "bar", "baz"},
 		},
 		{
 			name:     "filter by key substring",
 			filter:   func(n *Node) bool { return strings.Contains(n.Key, "ba") },
-			wantKeys: []string{"bar", "baz", "bad"},
+			wantKeys: []string{"bad", "bar", "baz"},
 		},
 		{
 			name:     "filter matching nothing",
@@ -138,18 +135,18 @@ func TestDFSIterPull(t *testing.T) {
 		{
 			name:     "default ObeyExpand skips collapsed children",
 			filter:   func(*Node) bool { return true },
-			wantKeys: []string{"foo", "bar", "baz", "bad"},
+			wantKeys: []string{"foo", "bad", "bar", "baz"},
 		},
 		{
 			name:     "match all with AllChildren",
 			filter:   func(*Node) bool { return true },
 			opts:     []DFSOption{WithNextNodes(AllChildren)},
-			wantKeys: []string{"foo", "bar", "baz", "bad", "unreached"},
+			wantKeys: []string{"foo", "bad", "unreached", "bar", "baz"},
 		},
 		{
 			name:     "filter by key substring",
 			filter:   func(n *Node) bool { return strings.Contains(n.Key, "ba") },
-			wantKeys: []string{"bar", "baz", "bad"},
+			wantKeys: []string{"bad", "bar", "baz"},
 		},
 	}
 	for _, tt := range tests {
@@ -178,12 +175,12 @@ func TestAllChildren(t *testing.T) {
 	}{
 		{
 			name: "returns children when expanded",
-			node: &Node{Expand: true, Children: []*Node{child}},
+			node: &Node{Expand: true, Children: childMap(child)},
 			want: []*Node{child},
 		},
 		{
 			name: "returns children even when collapsed",
-			node: &Node{Expand: false, Children: []*Node{child}},
+			node: &Node{Expand: false, Children: childMap(child)},
 			want: []*Node{child},
 		},
 		{
@@ -209,12 +206,12 @@ func TestObeyExpand(t *testing.T) {
 	}{
 		{
 			name: "expanded node returns children",
-			node: &Node{Expand: true, Children: []*Node{child}},
+			node: &Node{Expand: true, Children: childMap(child)},
 			want: []*Node{child},
 		},
 		{
 			name: "collapsed node returns nil",
-			node: &Node{Expand: false, Children: []*Node{child}},
+			node: &Node{Expand: false, Children: childMap(child)},
 			want: nil,
 		},
 		{
@@ -240,5 +237,5 @@ func TestWithNextNodes(t *testing.T) {
 		return nil
 	}, WithNextNodes(AllChildren))
 	assert.NoError(t, err)
-	assert.Equal(t, []string{"foo", "bar", "baz", "bad", "unreached"}, got)
+	assert.Equal(t, []string{"foo", "bad", "unreached", "bar", "baz"}, got)
 }

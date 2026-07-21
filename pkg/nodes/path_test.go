@@ -16,12 +16,12 @@ import (
 //	└── sibling2 (bad)
 func buildTestTree() (top, sibling1, sibling2, parent1, leaf *Node) {
 	leaf = &Node{ID: uuid.New(), Key: "target", Value: "hello"}
-	parent1 = &Node{ID: uuid.New(), Key: "final", Children: []*Node{leaf}}
+	parent1 = &Node{ID: uuid.New(), Key: "final", Children: childMap(leaf)}
 	leaf.Parent = parent1
-	sibling1 = &Node{ID: uuid.New(), Key: "bar", Children: []*Node{parent1}}
+	sibling1 = &Node{ID: uuid.New(), Key: "bar", Children: childMap(parent1)}
 	parent1.Parent = sibling1
 	sibling2 = &Node{ID: uuid.New(), Key: "bad"}
-	top = &Node{ID: uuid.New(), Key: "foo", Children: []*Node{sibling1, sibling2}}
+	top = &Node{ID: uuid.New(), Key: "foo", Children: childMap(sibling1, sibling2)}
 	sibling1.Parent = top
 	sibling2.Parent = top
 	return

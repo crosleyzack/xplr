@@ -90,8 +90,8 @@ func renderTree(conf *tui.Config, n []*nodes.Node) error {
 	style := styles.NewStyle(&conf.StyleConfig)
 	// populate KeyBasedStyles before creating the model so the copy it receives is complete
 	if meta, _ := nodes.GetNodeFromTree(n, []string{nodes.MetaKey}); meta != nil {
-		for _, child := range meta.Children {
-			style.KeyBasedStyles[child.Key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
+		for key, child := range meta.Children.Iter() {
+			style.KeyBasedStyles[key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
 		}
 	}
 	format := tree.NewFormat(&conf.TreeConfig)

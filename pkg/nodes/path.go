@@ -1,5 +1,6 @@
 package nodes
 
+// GetPathToNode get path from root to the given node
 func GetPathToNode(n *Node) []string {
 	path := []string{}
 	for current := n; current != nil; current = current.Parent {
@@ -20,18 +21,13 @@ func GetNodeFromPath(root *Node, path []string) (*Node, []string) {
 	current := root
 	remaining := path
 	for _, part := range path {
-		found := false
-		for _, child := range current.Children {
-			if child.Key == part {
-				current = child
-				remaining = remaining[1:]
-				found = true
-				break
-			}
-		}
-		if !found {
+		child := Child(current, part)
+		if child == nil {
+			// no such child, return furthest result along path
 			return current, remaining
 		}
+		current = child
+		remaining = remaining[1:]
 	}
 
 	return current, nil

@@ -240,7 +240,7 @@ func createDiffTree(tree1, tree2 []*nodes.Node, opts ...DiffTreeOption) ([]*node
 		},
 		nodes.WithNextNodes(func(n *nodes.Node) []*nodes.Node {
 			if shouldRecurse {
-				return n.Children
+				return n.Children.Arr()
 			}
 			return nil
 		}))
@@ -266,7 +266,7 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 
 	// If remaining is empty, current is the exact target node - attach n directly.
 	if len(remaining) == 0 {
-		current.Children = append(current.Children, n)
+		current.Children.Put(n.Key, n)
 		n.Parent = current
 		return tree, nil
 	}
@@ -285,8 +285,8 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 		tree = append(tree, subtree...)
 	} else {
 		// found a node partway through path - attach subtree to it and wire parents
-		current.Children = append(current.Children, subtree...)
 		for _, s := range subtree {
+			current.Children.Put(s.Key, s)
 			s.Parent = current
 		}
 	}
@@ -297,7 +297,7 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 		return nil, fmt.Errorf("failed to find node in subtree for path: %v", path)
 	}
 
-	node.Children = append(node.Children, n)
+	node.Children.Put(n.Key, n)
 	n.Parent = node
 	return tree, nil
 }
