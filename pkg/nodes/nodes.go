@@ -57,7 +57,7 @@ func Siblings(n *Node) []*Node {
 		return nil
 	}
 
-	return n.Children.Arr()
+	return n.Parent.Children.Arr()
 }
 
 // IsLeaf returns true if the node is a leaf node (has no children)

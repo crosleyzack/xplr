@@ -130,6 +130,9 @@ func (m *Model) nodeRenderer(node *nodes.Node, index, availableChars int) string
 	valueStr := replaceAll(node.Value, "\n\r", " ")
 	keyWidth := utf8.RuneCountInString(keyStr)
 	spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + m.spacesAfterKey - keyWidth
+	if spacesNeeded < 0 {
+		spacesNeeded = 0
+	}
 
 	availableChars -= keyWidth + spacesNeeded
 	if utf8.RuneCountInString(valueStr) > availableChars {
