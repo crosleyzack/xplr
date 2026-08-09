@@ -10,7 +10,7 @@ import (
 )
 
 // siblingMaxKeyWidth calculates the maximum key width among siblings
-func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
+func siblingMaxKeyWidth(node *nodes.Node, root *nodes.Node) int {
 	if node == nil {
 		return 0
 	}
@@ -18,7 +18,7 @@ func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
 	siblings := nodes.Siblings(node)
 	if len(siblings) == 0 {
 		// For root level nodes, siblings are all root nodes
-		siblings = rootNodes
+		siblings = []*nodes.Node{root}
 	}
 
 	maxWidth := 0
@@ -32,7 +32,7 @@ func siblingMaxKeyWidth(node *nodes.Node, rootNodes []*nodes.Node) int {
 
 // View returns the string representation of the tree
 func (m *Model) View() string {
-	if m == nil || m.Nodes == nil {
+	if m == nil || m.Root == nil {
 		return "no data"
 	}
 	treeContent, err := m.renderTree()
@@ -60,7 +60,7 @@ func (m *Model) renderTree() (string, error) {
 		}
 		return nil
 	}
-	if err := nodes.DFS(m.Nodes, f); err != nil {
+	if err := nodes.DFS(m.Root, f); err != nil {
 		return "", fmt.Errorf("Failed to render tree: %w", err)
 	}
 	return lipgloss.NewStyle().Height(m.Height).Width(m.Width).Render(b.String()), nil
@@ -129,7 +129,7 @@ func (m *Model) nodeRenderer(node *nodes.Node, index, availableChars int) string
 	keyStr := replaceAll(node.Key, "\n\r", " ")
 	valueStr := replaceAll(node.Value, "\n\r", " ")
 	keyWidth := utf8.RuneCountInString(keyStr)
-	spacesNeeded := siblingMaxKeyWidth(node, m.Nodes) + m.spacesAfterKey - keyWidth
+	spacesNeeded := siblingMaxKeyWidth(node, m.Root) + m.spacesAfterKey - keyWidth
 	if spacesNeeded < 0 {
 		spacesNeeded = 0
 	}

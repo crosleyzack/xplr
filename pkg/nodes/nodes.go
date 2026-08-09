@@ -1,9 +1,7 @@
 package nodes
 
 import (
-	"slices"
 	"strconv"
-	"strings"
 
 	"github.com/crosleyzack/xplr/pkg/omap"
 	"github.com/google/uuid"
@@ -66,37 +64,39 @@ func IsLeaf(n *Node) bool {
 }
 
 // ToMap converts a node back to a map[string]any, which can be used to convert back to JSON
-func ToMap(n []*Node) map[string]any {
+func ToMap(nodes ...*Node) map[string]any {
 	m := make(map[string]any)
-	for _, n := range n {
+	for _, n := range nodes {
 		if IsLeaf(n) {
 			m[n.Key] = n.Value
 			continue
 		}
-		m[n.Key] = ToMap(n.Children.Arr())
+		m[n.Key] = ToMap(n.Children.Arr()...)
 	}
 	return m
 }
 
+func addChild(node, child *Node) {
+	child.Parent = node
+	node.Children.Put(child.Key, child)
+}
+
 // New creates a new tree from a JSON object
-func New(json map[string]any, displayLayers uint, repr ReprNode) []*Node {
+func New(json map[string]any, displayLayers uint, repr ReprNode) *Node {
 	return makeTree(json, 0, displayLayers, repr)
 }
 
 // makeTree creates a tree of nodes from a JSON object
-func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode) []*Node {
-	nodes := make([]*Node, 0, len(json))
-	for k, v := range json {
-		node := NewNode(k, v, layer, displayLayers, repr)
-		nodes = append(nodes, node)
+func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode) *Node {
+	tree := &Node{
+		ID:     uuid.New(),
+		Expand: layer < displayLayers,
 	}
-	slices.SortFunc(nodes, func(a, b *Node) int {
-		// NOTE: limitation of this is if the keys are all
-		// string numbers (IE "1", "2", ...) this will not
-		// order correctly.
-		return strings.Compare(a.Key, b.Key)
-	})
-	return nodes
+	for k, v := range json {
+		node := NewNode(k, v, layer+1, displayLayers, repr)
+		addChild(tree, node)
+	}
+	return tree
 }
 
 // IsArray checks if a node represents an array (all children have numeric keys)
@@ -149,24 +149,15 @@ func NewNode(key string, value any, layer uint, displayLayers uint, repr ReprNod
 		node.Children = omap.New[string, *Node]()
 		for i, child := range v {
 			n := NewNode(strconv.FormatUint(uint64(i), 10), child, layer+1, displayLayers, repr)
-			n.Parent = node
-			node.Children.Put(n.Key, n)
+			addChild(node, n)
 		}
 		node.Value = "[]"
 		if len(v) > 0 {
 			node.Value = repr(node)
 		}
 	case map[string]any:
-		node.Children = omap.New[string, *Node]()
-		tree := makeTree(v, layer+1, displayLayers, repr)
-		for _, n := range tree {
-			n.Parent = node
-			node.Children.Put(n.Key, n)
-		}
-		node.Value = "{}"
-		if len(v) > 0 {
-			node.Value = repr(node)
-		}
+		node = makeTree(v, layer+1, displayLayers, repr)
+		node.Key = key
 	}
 	return node
 }

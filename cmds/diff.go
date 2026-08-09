@@ -169,7 +169,7 @@ func WithNilValue(val string) func(*diffConf) {
 	}
 }
 
-func createDiffTree(tree1, tree2 []*nodes.Node, opts ...DiffTreeOption) ([]*nodes.Node, error) {
+func createDiffTree(tree1, tree2 *nodes.Node, opts ...DiffTreeOption) (*nodes.Node, error) {
 	conf := defaultDiffConf()
 	for _, opt := range opts {
 		opt(conf)
@@ -185,7 +185,7 @@ func createDiffTree(tree1, tree2 []*nodes.Node, opts ...DiffTreeOption) ([]*node
 			// path will never be empty, as we are traversing tree 1
 			// so we know it is in tree 1
 			path := nodes.GetPathToNode(n)
-			other, remaining := nodes.GetNodeFromTree(tree2, path)
+			other, remaining := nodes.GetNodeFromPath(tree2, path)
 			switch {
 			case other == nil:
 				// this path is not in tree2 diverging from the root,
@@ -198,14 +198,14 @@ func createDiffTree(tree1, tree2 []*nodes.Node, opts ...DiffTreeOption) ([]*node
 				}
 				path = path[:1]
 				// get node from tree1 at this path
-				n, _ = nodes.GetNodeFromTree(tree1, path)
+				n, _ = nodes.GetNodeFromPath(tree1, path)
 			case len(remaining) > 0:
 				// this path is not in tree2, calculate where they
 				// diverge and get that node. Where they diverge
 				// is the first item in remaining
 				path = nodes.TrimPath(path, remaining[1:])
 				// set n to this divergent node
-				n, _ = nodes.GetNodeFromTree(tree1, path)
+				n, _ = nodes.GetNodeFromPath(tree1, path)
 				if n == nil {
 					return fmt.Errorf("this should never happen!")
 				}
@@ -251,18 +251,20 @@ func createDiffTree(tree1, tree2 []*nodes.Node, opts ...DiffTreeOption) ([]*node
 	return diffTree, nil
 }
 
-func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, error) {
+func addNode(tree *nodes.Node, path []string, n *nodes.Node) (*nodes.Node, error) {
 	if n == nil {
 		return tree, nil
 	}
 
 	if len(path) == 0 {
-		tree = append(tree, n)
+		// we will just append to root
+		tree.Children.Put(n.Key, n)
+		n.Parent = tree
 		return tree, nil
 	}
 
 	// find or create root-level node matching path[0]
-	current, remaining := nodes.GetNodeFromTree(tree, path)
+	current, remaining := nodes.GetNodeFromPath(tree, path)
 
 	// If remaining is empty, current is the exact target node - attach n directly.
 	if len(remaining) == 0 {
@@ -282,18 +284,18 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 
 	if current == nil {
 		// no matching root node found - add subtree to root tree
-		tree = append(tree, subtree...)
-	} else {
-		// found a node partway through path - attach subtree to it and wire parents
-		for _, s := range subtree {
-			current.Children.Put(s.Key, s)
-			s.Parent = current
-		}
+		current = tree
+	}
+	// found a node partway through path - attach subtree to it and wire parents
+	for key, child := range subtree.Children.Iter() {
+		current.Children.Put(key, child)
+		child.Parent = current
 	}
 
 	// get node from end of subtree and attach n
-	node, remaining := nodes.GetNodeFromTree(subtree, remaining)
+	node, remaining := nodes.GetNodeFromPath(subtree, remaining)
 	if node == nil || len(remaining) != 0 {
+
 		return nil, fmt.Errorf("failed to find node in subtree for path: %v", path)
 	}
 
@@ -302,7 +304,7 @@ func addNode(tree []*nodes.Node, path []string, n *nodes.Node) ([]*nodes.Node, e
 	return tree, nil
 }
 
-func printOutput(diffTree []*nodes.Node, formatter func(map[string]any) ([]byte, error)) error {
+func printOutput(diffTree *nodes.Node, formatter func(map[string]any) ([]byte, error)) error {
 	b, err := formatter(nodes.ToMap(diffTree))
 	if err != nil {
 		return fmt.Errorf("failed to convert diff tree to json: %w", err)
@@ -311,7 +313,7 @@ func printOutput(diffTree []*nodes.Node, formatter func(map[string]any) ([]byte,
 	return nil
 }
 
-func updateRepr(tree []*nodes.Node, f nodes.ReprNode) error {
+func updateRepr(tree *nodes.Node, f nodes.ReprNode) error {
 	return nodes.DFS(
 		tree,
 		func(n *nodes.Node, _ int) error {
@@ -340,7 +342,7 @@ func copyNode(n *nodes.Node) *nodes.Node {
 
 var defaultDiffColors = []string{"#ad0116", "#006222"}
 
-func addMeta(tree []*nodes.Node, conf *tui.Config, key1 string, key2 string) ([]*nodes.Node, error) {
+func addMeta(tree *nodes.Node, conf *tui.Config, key1 string, key2 string) (*nodes.Node, error) {
 	colors := conf.DiffColors
 	if len(colors) < 2 {
 		colors = defaultDiffColors

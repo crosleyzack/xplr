@@ -21,7 +21,7 @@ func WithNextNodes(f NextNodes) DFSOption {
 }
 
 // DFS perform depth first search on tree and run f on nodes
-func DFS(nodes []*Node, f func(*Node, int) error, opts ...DFSOption) error {
+func DFS(nodes *Node, f func(*Node, int) error, opts ...DFSOption) error {
 	conf := defaultSearchConfig()
 	for _, opt := range opts {
 		opt(conf)
@@ -30,29 +30,27 @@ func DFS(nodes []*Node, f func(*Node, int) error, opts ...DFSOption) error {
 }
 
 // dfs implementation of dfs
-func dfs(nodes []*Node, f func(*Node, int) error, conf *searchConfig, layer int) error {
-	for _, node := range nodes {
-		if err := f(node, layer); err != nil {
+func dfs(root *Node, f func(*Node, int) error, conf *searchConfig, layer int) error {
+	if err := f(root, layer); err != nil {
+		return err
+	}
+	next := conf.NextNodes(root)
+	for _, n := range next {
+		if err := dfs(n, f, conf, layer+1); err != nil {
 			return err
-		}
-		next := conf.NextNodes(node)
-		if len(next) > 0 {
-			if err := dfs(next, f, conf, layer+1); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
 }
 
 // DFSIter a DFS implementation as an iterator for efficient searches
-func DFSIter(nodes []*Node, f func(*Node) bool, opts ...DFSOption) func(func(*Node) bool) {
+func DFSIter(root *Node, f func(*Node) bool, opts ...DFSOption) func(func(*Node) bool) {
 	// get config
 	conf := defaultSearchConfig()
 	for _, opt := range opts {
 		opt(conf)
 	}
-	stack := nodes
+	stack := []*Node{root}
 	var n *Node
 	return func(yield func(*Node) bool) {
 		for len(stack) > 0 {
