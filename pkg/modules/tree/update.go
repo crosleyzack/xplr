@@ -81,7 +81,7 @@ func (m *Model) InvertCollaped() {
 // ExpandCollapseAll set the expand flag on every node
 func (m *Model) ExpandCollapseAll(n *nodes.Node, expand bool) {
 	err := nodes.DFS(
-		[]*nodes.Node{n},
+		n,
 		func(n *nodes.Node, _ int) error {
 			n.Expand = expand
 			return nil
@@ -100,7 +100,7 @@ func (m *Model) GetMatchingNodes(searchTerm string) error {
 		m.searchStop()
 	}
 	m.searchResults = make([]*nodes.Node, 0)
-	m.searchNext, m.searchStop = iter.Pull(nodes.DFSIter(m.Nodes, func(node *nodes.Node) bool {
+	m.searchNext, m.searchStop = iter.Pull(nodes.DFSIter(m.Root, func(node *nodes.Node) bool {
 		// match on leaf ndes which match search term
 		if nodes.IsLeaf(node) {
 			if out, err := regexp.Match(searchTerm, []byte(node.Value)); err == nil && out {
@@ -153,7 +153,7 @@ func (m *Model) NextMatchingNode() {
 	}
 	// get cursor position of current node
 	count := 0
-	nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
+	nodes.DFS(m.Root, func(node *nodes.Node, layer int) error {
 		if node.Equal(m.currentNode) {
 			m.cursor = count
 			return errors.New("break out")
@@ -176,7 +176,7 @@ func (m *Model) CopyNodePath() error {
 
 // SetLayersExpanded expands the tree to N layers shown, the rest being collapsed
 func (m *Model) SetLayersExpanded(num int) error {
-	return nodes.DFS(m.Nodes, func(node *nodes.Node, layer int) error {
+	return nodes.DFS(m.Root, func(node *nodes.Node, layer int) error {
 		if layer < num {
 			node.Expand = true
 		} else {

@@ -15,7 +15,7 @@ import (
 type Model struct {
 	KeyMap                  keys.KeyMap
 	Styles                  styles.Style
-	Nodes                   []*nodes.Node
+	Root                    *nodes.Node
 	Height                  int
 	Width                   int
 	ExpandedShape           string
@@ -34,11 +34,11 @@ type Model struct {
 var _ tea.Model = &Model{}
 
 // New creates a new Model for the tree
-func New(format *TreeFormat, keys keys.KeyMap, style styles.Style, nodes []*nodes.Node) *Model {
+func New(format *TreeFormat, keys keys.KeyMap, style styles.Style, root *nodes.Node) *Model {
 	return &Model{
 		KeyMap:                  keys,
 		Styles:                  style,
-		Nodes:                   nodes,
+		Root:                    root,
 		Height:                  format.Height,
 		Width:                   format.Width,
 		ExpandedShape:           format.ExpandedShape,
@@ -57,7 +57,7 @@ func New(format *TreeFormat, keys keys.KeyMap, style styles.Style, nodes []*node
 // NumberOfNodes returns the number of nodes in the tree
 func (m *Model) NumberOfNodes() int {
 	count := 0
-	err := nodes.DFS(m.Nodes, func(node *nodes.Node, _ int) error {
+	err := nodes.DFS(m.Root, func(node *nodes.Node, _ int) error {
 		count++
 		return nil
 	})

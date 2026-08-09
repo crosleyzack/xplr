@@ -3,7 +3,8 @@ package nodes
 // GetPathToNode get path from root to the given node
 func GetPathToNode(n *Node) []string {
 	path := []string{}
-	for current := n; current != nil; current = current.Parent {
+	// we want to exit once current.Parent == nil, as that is the root node
+	for current := n; current.Parent != nil; current = current.Parent {
 		path = append([]string{current.Key}, path...)
 	}
 	return path
@@ -31,23 +32,6 @@ func GetNodeFromPath(root *Node, path []string) (*Node, []string) {
 	}
 
 	return current, nil
-}
-
-// GetNodeFromTree walks down the tree from root following the path and returns
-// the node at the end of the path and any remaining path if it doesn't exist
-func GetNodeFromTree(root []*Node, path []string) (*Node, []string) {
-	if len(path) == 0 {
-		return nil, nil
-	}
-	if len(root) == 0 {
-		return nil, path
-	}
-	for _, node := range root {
-		if node.Key == path[0] {
-			return GetNodeFromPath(node, path[1:])
-		}
-	}
-	return nil, path
 }
 
 // GetCommonPath gets the longest common path between two paths

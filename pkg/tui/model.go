@@ -29,7 +29,7 @@ type Model struct {
 var _ tea.Model = &Model{}
 
 // New creates a new Model for the TUI
-func New(format *tree.TreeFormat, keymap keys.KeyMap, style styles.Style, nodes []*nodes.Node) (*Model, error) {
+func New(format *tree.TreeFormat, keymap keys.KeyMap, style styles.Style, nodes *nodes.Node) (*Model, error) {
 	w, h, err := term.GetSize(os.Stdout.Fd())
 	if err != nil {
 		return nil, err

@@ -85,11 +85,11 @@ func getData(args, file string) (data []byte, err error) {
 }
 
 // renderTree takes in a config and a node tree and renders the TUI tree interface
-func renderTree(conf *tui.Config, n []*nodes.Node) error {
+func renderTree(conf *tui.Config, n *nodes.Node) error {
 	keyMap := keys.NewKeyMap(&conf.KeyConfig)
 	style := styles.NewStyle(&conf.StyleConfig)
 	// populate KeyBasedStyles before creating the model so the copy it receives is complete
-	if meta, _ := nodes.GetNodeFromTree(n, []string{nodes.MetaKey}); meta != nil {
+	if meta, _ := nodes.GetNodeFromPath(n, []string{nodes.MetaKey}); meta != nil {
 		for key, child := range meta.Children.Iter() {
 			style.KeyBasedStyles[key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
 		}
