@@ -89,7 +89,7 @@ func renderTree(conf *tui.Config, n *nodes.Node) error {
 	keyMap := keys.NewKeyMap(&conf.KeyConfig)
 	style := styles.NewStyle(&conf.StyleConfig)
 	// populate KeyBasedStyles before creating the model so the copy it receives is complete
-	if meta, _ := nodes.GetNodeFromPath(n, []string{nodes.MetaKey}); meta != nil {
+	if meta := nodes.Child(n, nodes.MetaKey); meta != nil {
 		for key, child := range meta.Children.Iter() {
 			style.KeyBasedStyles[key] = lipgloss.NewStyle().Background(lipgloss.Color(child.Value))
 		}

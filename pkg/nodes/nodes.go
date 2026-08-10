@@ -63,6 +63,11 @@ func IsLeaf(n *Node) bool {
 	return n.Children.Len() == 0
 }
 
+// IsRoot returns true if the node is the root node
+func IsRoot(n *Node) bool {
+	return n.Parent == nil
+}
+
 // ToMap converts a node back to a map[string]any, which can be used to convert back to JSON
 func ToMap(nodes ...*Node) map[string]any {
 	m := make(map[string]any)
@@ -81,16 +86,28 @@ func addChild(node, child *Node) {
 	node.Children.Put(child.Key, child)
 }
 
-// New creates a new tree from a JSON object
+// New creates a new tree from a JSON object. The returned node is a sentinel
+// root: it is not rendered, so the JSON's top-level entries are its children at
+// display layer 0.
 func New(json map[string]any, displayLayers uint, repr ReprNode) *Node {
-	return makeTree(json, 0, displayLayers, repr)
+	root := &Node{
+		ID:       uuid.New(),
+		Children: omap.New[string, *Node](),
+		Expand:   true,
+	}
+	for k, v := range json {
+		addChild(root, NewNode(k, v, 0, displayLayers, repr))
+	}
+	return root
 }
 
-// makeTree creates a tree of nodes from a JSON object
+// makeTree creates a node for a JSON object at the given display layer. Its
+// children are one layer deeper.
 func makeTree(json map[string]any, layer uint, displayLayers uint, repr ReprNode) *Node {
 	tree := &Node{
-		ID:     uuid.New(),
-		Expand: layer < displayLayers,
+		ID:       uuid.New(),
+		Children: omap.New[string, *Node](),
+		Expand:   layer < displayLayers,
 	}
 	for k, v := range json {
 		node := NewNode(k, v, layer+1, displayLayers, repr)
@@ -156,7 +173,9 @@ func NewNode(key string, value any, layer uint, displayLayers uint, repr ReprNod
 			node.Value = repr(node)
 		}
 	case map[string]any:
-		node = makeTree(v, layer+1, displayLayers, repr)
+		// the map node itself sits at `layer`; makeTree places its children one
+		// layer deeper.
+		node = makeTree(v, layer, displayLayers, repr)
 		node.Key = key
 	}
 	return node
