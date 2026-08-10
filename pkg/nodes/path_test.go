@@ -24,6 +24,10 @@ func buildTestTree() (top, sibling1, sibling2, parent1, leaf *Node) {
 	top = &Node{ID: uuid.New(), Key: "foo", Children: childMap(sibling1, sibling2)}
 	sibling1.Parent = top
 	sibling2.Parent = top
+	// top hangs off a sentinel root (Parent == nil). GetPathToNode stops at the
+	// sentinel, so paths start at "foo" rather than the sentinel's empty key.
+	root := &Node{ID: uuid.New(), Children: childMap(top)}
+	top.Parent = root
 	return
 }
 

@@ -117,7 +117,9 @@ func TestNew(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := New(tt.input, 2, LeafValuesOnly)
+			// New returns a single sentinel root; the top-level nodes are its
+			// children, held in sorted key order.
+			result := New(tt.input, 2, LeafValuesOnly).Children.Arr()
 			if len(result) != len(tt.expected) {
 				t.Errorf("New() returned %d nodes, want %d", len(result), len(tt.expected))
 				return
@@ -176,7 +178,7 @@ func TestToMap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ToMap(tt.nodes)
+			got := ToMap(tt.nodes...)
 			assert.Equal(t, tt.expected, got)
 		})
 	}
