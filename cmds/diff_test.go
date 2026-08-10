@@ -91,17 +91,21 @@ func TestAddNode(t *testing.T) {
 	newNode := func(key, value string) *nodes.Node {
 		return &nodes.Node{ID: uuid.New(), Key: key, Value: value}
 	}
-	newTree := func(keys ...string) []*nodes.Node {
-		tree := make([]*nodes.Node, len(keys))
-		for i, k := range keys {
-			tree[i] = &nodes.Node{ID: uuid.New(), Key: k}
+	// newTree builds a sentinel root holding the given top-level keys as leaf
+	// children, matching how New represents a tree.
+	newTree := func(keys ...string) *nodes.Node {
+		root := nodes.New(map[string]any{}, 0, nodes.EmptyRepr)
+		for _, k := range keys {
+			child := &nodes.Node{ID: uuid.New(), Key: k}
+			root.Children.Put(k, child)
+			child.Parent = root
 		}
-		return tree
+		return root
 	}
 
 	tests := []struct {
 		name        string
-		tree        []*nodes.Node
+		tree        *nodes.Node
 		path        []string
 		n           *nodes.Node
 		expectedMap map[string]any
@@ -159,7 +163,8 @@ func TestAddNode(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.expectedMap, nodes.ToMap(got))
+			// got is the sentinel root; its children are the top-level nodes.
+			assert.Equal(t, tt.expectedMap, nodes.ToMap(got.Children.Arr()...))
 		})
 	}
 }
@@ -275,7 +280,7 @@ func TestCreateDiffTree(t *testing.T) {
 			tree2 := nodes.New(tt.m2, 0, nodes.EmptyRepr)
 			diff, err := createDiffTree(tree1, tree2)
 			require.NoError(t, err)
-			require.Equal(t, tt.expected, nodes.ToMap(diff))
+			require.Equal(t, tt.expected, nodes.ToMap(diff.Children.Arr()...))
 		})
 	}
 }
@@ -283,7 +288,7 @@ func TestCreateDiffTree(t *testing.T) {
 func TestUpdateRepr(t *testing.T) {
 	// collectValues walks the entire tree (ignoring Expand) and returns a map of
 	// dot-separated path -> node Value for every node.
-	collectValues := func(tree []*nodes.Node) map[string]string {
+	collectValues := func(tree *nodes.Node) map[string]string {
 		result := map[string]string{}
 		_ = nodes.DFS(tree, func(n *nodes.Node, _ int) error {
 			path := strings.Join(nodes.GetPathToNode(n), ".")

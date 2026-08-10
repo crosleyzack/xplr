@@ -36,6 +36,17 @@ func testSearchTree() *Node {
 	}
 }
 
+// rootOf wraps top-level nodes under a sentinel root (Parent == nil), mirroring
+// how New builds a tree. DFS/DFSIter skip this sentinel and start at its
+// children, so the wrapped nodes are visited at layer 0.
+func rootOf(children ...*Node) *Node {
+	root := &Node{Children: childMap(children...)}
+	for _, c := range children {
+		c.Parent = root
+	}
+	return root
+}
+
 func TestDFS(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -59,7 +70,7 @@ func TestDFS(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var gotKeys []string
 			var gotLayers []int
-			err := DFS([]*Node{testSearchTree()}, func(n *Node, layer int) error {
+			err := DFS(rootOf(testSearchTree()), func(n *Node, layer int) error {
 				gotKeys = append(gotKeys, n.Key)
 				gotLayers = append(gotLayers, layer)
 				return nil
@@ -74,7 +85,7 @@ func TestDFS(t *testing.T) {
 func TestDFSError(t *testing.T) {
 	sentinel := errors.New("stop here")
 	var visited []string
-	err := DFS([]*Node{testSearchTree()}, func(n *Node, _ int) error {
+	err := DFS(rootOf(testSearchTree()), func(n *Node, _ int) error {
 		visited = append(visited, n.Key)
 		if n.Key == "bar" {
 			return sentinel
@@ -117,7 +128,7 @@ func TestDFSIter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got []string
-			for n := range DFSIter([]*Node{testSearchTree()}, tt.filter, tt.opts...) {
+			for n := range DFSIter(rootOf(testSearchTree()), tt.filter, tt.opts...) {
 				got = append(got, n.Key)
 			}
 			assert.Equal(t, tt.wantKeys, got)
@@ -152,7 +163,7 @@ func TestDFSIterPull(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got []string
-			next, stop := iter.Pull(DFSIter([]*Node{testSearchTree()}, tt.filter, tt.opts...))
+			next, stop := iter.Pull(DFSIter(rootOf(testSearchTree()), tt.filter, tt.opts...))
 			defer stop()
 			for {
 				n, ok := next()
@@ -232,7 +243,7 @@ func TestWithNextNodes(t *testing.T) {
 	// WithNextNodes should override the default ObeyExpand with AllChildren,
 	// causing collapsed nodes' children to be visited.
 	var got []string
-	err := DFS([]*Node{testSearchTree()}, func(n *Node, _ int) error {
+	err := DFS(rootOf(testSearchTree()), func(n *Node, _ int) error {
 		got = append(got, n.Key)
 		return nil
 	}, WithNextNodes(AllChildren))
