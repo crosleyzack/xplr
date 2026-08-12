@@ -1,16 +1,19 @@
 package cmds
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/crosleyzack/xplr/pkg/tui"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCompareNodes(t *testing.T) {
+func TestNodesEquivalent(t *testing.T) {
 	leaf := func(key, value string) *nodes.Node {
 		return &nodes.Node{ID: uuid.New(), Key: key, Value: value}
 	}
@@ -27,62 +30,60 @@ func TestCompareNodes(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		n1, n2   *nodes.Node
+		nodes    []*nodes.Node
 		expected bool
 	}{
+		// pairwise cases
 		{
 			name:     "equal leaf nodes",
-			n1:       leaf("x", "v"),
-			n2:       leaf("x", "v"),
+			nodes:    []*nodes.Node{leaf("x", "v"), leaf("x", "v")},
+			expected: true,
+		},
+		{
+			name:     "both nil are equivalent",
+			nodes:    []*nodes.Node{nil, nil},
 			expected: true,
 		},
 		{
 			name:     "n1 nil n2 non-nil",
-			n1:       nil,
-			n2:       leaf("x", "v"),
+			nodes:    []*nodes.Node{nil, leaf("x", "v")},
 			expected: false,
 		},
 		{
 			name:     "n1 non-nil n2 nil",
-			n1:       leaf("x", "v"),
-			n2:       nil,
+			nodes:    []*nodes.Node{leaf("x", "v"), nil},
 			expected: false,
 		},
 		{
 			name:     "different keys",
-			n1:       leaf("a", "v"),
-			n2:       leaf("b", "v"),
+			nodes:    []*nodes.Node{leaf("a", "v"), leaf("b", "v")},
 			expected: false,
 		},
 		{
 			name:     "different values",
-			n1:       leaf("x", "1"),
-			n2:       leaf("x", "2"),
+			nodes:    []*nodes.Node{leaf("x", "1"), leaf("x", "2")},
 			expected: false,
 		},
 		{
 			name:     "one leaf one non-leaf",
-			n1:       leaf("x", "v"),
-			n2:       nonLeaf("x", leaf("c", "v")),
+			nodes:    []*nodes.Node{leaf("x", "v"), nonLeaf("x", leaf("c", "v"))},
 			expected: false,
 		},
 		{
 			name:     "leaf array vs non-array non-leaf",
-			n1:       leafArray("x"),
-			n2:       nonLeaf("x", leaf("a", "v"), leaf("b", "v")),
+			nodes:    []*nodes.Node{leafArray("x"), nonLeaf("x", leaf("a", "v"), leaf("b", "v"))},
 			expected: false,
 		},
 		{
 			name:     "equal non-leaf nodes",
-			n1:       nonLeaf("x", leaf("c", "v")),
-			n2:       nonLeaf("x", leaf("c", "v")),
+			nodes:    []*nodes.Node{nonLeaf("x", leaf("c", "v")), nonLeaf("x", leaf("c", "v"))},
 			expected: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, nodesEquivalent(tt.n1, tt.n2))
+			assert.Equal(t, tt.expected, nodesEquivalent(tt.nodes[0], tt.nodes[1]))
 		})
 	}
 }
@@ -281,6 +282,169 @@ func TestCreateDiffTree(t *testing.T) {
 			diff, err := createDiffTree(tree1, tree2)
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, nodes.ToMap(diff.Children.Arr()...))
+		})
+	}
+}
+
+func TestGatherInputs(t *testing.T) {
+	dir := t.TempDir()
+	writeFile := func(name, content string) string {
+		p := filepath.Join(dir, name)
+		require.NoError(t, os.WriteFile(p, []byte(content), 0o600))
+		return p
+	}
+	fileA := writeFile("a.json", "AAA")
+	fileB := writeFile("b.json", "BBB")
+	stdinFile := writeFile("stdin.json", "SSS")
+
+	// os.DevNull is a character device, so piped() is false and stdin is
+	// ignored; a regular file is not, so it is read as a piped source.
+	devNull, err := os.Open(os.DevNull)
+	require.NoError(t, err)
+	t.Cleanup(func() { devNull.Close() })
+
+	tests := []struct {
+		name     string
+		args     []string
+		files    []string
+		useStdin bool
+		want     [][]byte
+	}{
+		{
+			name:  "files only in flag order",
+			files: []string{fileA, fileB},
+			want:  [][]byte{[]byte("AAA"), []byte("BBB")},
+		},
+		{
+			name: "args only as inline data",
+			args: []string{"one", "two"},
+			want: [][]byte{[]byte("one"), []byte("two")},
+		},
+		{
+			name:  "files come before args",
+			files: []string{fileA},
+			args:  []string{"arg"},
+			want:  [][]byte{[]byte("AAA"), []byte("arg")},
+		},
+		{
+			name:     "stdin comes last",
+			files:    []string{fileA},
+			args:     []string{"arg"},
+			useStdin: true,
+			want:     [][]byte{[]byte("AAA"), []byte("arg"), []byte("SSS")},
+		},
+		{
+			name:     "stdin only",
+			useStdin: true,
+			want:     [][]byte{[]byte("SSS")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdin := devNull
+			if tt.useStdin {
+				f, err := os.Open(stdinFile)
+				require.NoError(t, err)
+				t.Cleanup(func() { f.Close() })
+				stdin = f
+			}
+			got, err := gatherInputs(tt.args, tt.files, stdin)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestGatherInputsEmptyStdinSkipped(t *testing.T) {
+	// a piped but empty stdin adds no operand.
+	empty := filepath.Join(t.TempDir(), "empty")
+	require.NoError(t, os.WriteFile(empty, nil, 0o600))
+	f, err := os.Open(empty)
+	require.NoError(t, err)
+	t.Cleanup(func() { f.Close() })
+
+	got, err := gatherInputs([]string{"x"}, nil, f)
+	require.NoError(t, err)
+	assert.Equal(t, [][]byte{[]byte("x")}, got)
+}
+
+func TestGatherInputsFileError(t *testing.T) {
+	devNull, err := os.Open(os.DevNull)
+	require.NoError(t, err)
+	t.Cleanup(func() { devNull.Close() })
+
+	_, err = gatherInputs(nil, []string{filepath.Join(t.TempDir(), "missing.json")}, devNull)
+	require.Error(t, err)
+}
+
+func TestDefaultKeys(t *testing.T) {
+	tests := []struct {
+		name string
+		n    int
+		want []string
+	}{
+		{name: "zero", n: 0, want: []string{}},
+		{name: "one", n: 1, want: []string{"_f1"}},
+		{name: "three", n: 3, want: []string{"_f1", "_f2", "_f3"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, defaultKeys(tt.n))
+		})
+	}
+}
+
+func TestAddMeta(t *testing.T) {
+	// metaColors returns the color value stored for each key under the meta node.
+	metaColors := func(tree *nodes.Node) map[string]string {
+		m := map[string]string{}
+		meta := nodes.Child(tree, nodes.MetaKey)
+		if meta == nil {
+			return m
+		}
+		for k, child := range meta.Children.Iter() {
+			m[k] = child.Value
+		}
+		return m
+	}
+
+	tests := []struct {
+		name       string
+		diffColors []string
+		keys       []string
+		want       map[string]string
+	}{
+		{
+			name:       "two keys use configured colors",
+			diffColors: []string{"#111", "#222"},
+			keys:       []string{"_f1", "_f2"},
+			want:       map[string]string{"_f1": "#111", "_f2": "#222"},
+		},
+		{
+			name:       "three keys with enough configured colors",
+			diffColors: []string{"#111", "#222", "#333"},
+			keys:       []string{"_f1", "_f2", "_f3"},
+			want:       map[string]string{"_f1": "#111", "_f2": "#222", "_f3": "#333"},
+		},
+		{
+			name:       "too few colors fall back to defaults and cycle",
+			diffColors: []string{"#111"},
+			keys:       []string{"_f1", "_f2", "_f3"},
+			want: map[string]string{
+				"_f1": defaultDiffColors[0],
+				"_f2": defaultDiffColors[1],
+				"_f3": defaultDiffColors[0],
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			conf := &tui.Config{}
+			conf.DiffColors = tt.diffColors
+			tree := nodes.New(map[string]any{}, 0, nodes.EmptyRepr)
+			tree, err := addMeta(tree, conf, tt.keys...)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, metaColors(tree))
 		})
 	}
 }
