@@ -2,6 +2,7 @@ package cmds
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/crosleyzack/xplr/pkg/format"
 	"github.com/crosleyzack/xplr/pkg/nodes"
@@ -10,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NOTE: current limitation of this is it will not show items in
-// tree2 that are not in tree1, as it only does a single dfs over tree1
-// TODO: fix the above, and make this work with N trees
+// NewDiffCmd builds the `diff` command. It compares N trees drawn from any mix
+// of files (-f), positional arguments, and a piped stdin, walking them together
+// with DFSMulti so nodes present in only some trees still appear in the diff.
 func NewDiffCmd() *cobra.Command {
 	var files, keys []string
 	var output string
@@ -21,48 +22,50 @@ func NewDiffCmd() *cobra.Command {
 		Use:     "diff []",
 		Aliases: []string{"d"},
 		Version: "0.2.5",
-		Short:   "Diff two tree data files with a TUI graphical interface",
-		Long:    "Takes in two tree data files (JSON, YAML, TOML) either via flag parameter to compare the two files.",
+		Short:   "Diff two or more tree data files with a TUI graphical interface",
+		Long:    "Takes in two or more tree data sources (JSON, YAML, TOML) via file flags, positional arguments, or a piped stdin and compares them.",
 		Example: "xplr diff -f foo.json -f bar.json",
-		Args:    cobra.MaximumNArgs(2),
+		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			// get config
 			c, err := tui.NewConfig()
 			if err != nil {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
-			d1, err := getData(getSafe(args, 0), getSafe(files, 0))
+			// gather every operand from files, arguments and a piped stdin.
+			inputs, err := gatherInputs(args, files, os.Stdin)
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
-			d2, err := getData(getSafe(args, 1), getSafe(files, 1))
-			if err != nil {
-				return fmt.Errorf("failed to get data: %w", err)
+			if len(inputs) != 2 {
+				// TODO: relax once n diff implemented
+				return fmt.Errorf("diff needs exactly two inputs, got %d", len(inputs))
 			}
 
-			// get keys
-			if len(keys) != 2 {
-				return fmt.Errorf("two keys required, got %d", len(keys))
+			// keys default to _f1.._fN; when supplied, one is required per input.
+			if len(keys) == 0 {
+				keys = defaultKeys(len(inputs))
 			}
-			key1 := keys[0]
-			key2 := keys[1]
-
-			// get data as map[string]any
-			m1, err := format.Parse(d1)
-			if err != nil {
-				return fmt.Errorf("failed to parse data: %w", err)
-			}
-			m2, err := format.Parse(d2)
-			if err != nil {
-				return fmt.Errorf("failed to parse data: %w", err)
+			if len(keys) != len(inputs) {
+				return fmt.Errorf("need one key per input: got %d keys for %d inputs", len(keys), len(inputs))
 			}
 
-			tree1 := nodes.New(m1, 0, nodes.EmptyRepr)
-			tree2 := nodes.New(m2, 0, nodes.EmptyRepr)
+			// parse each input into its own tree.
+			trees := make([]*nodes.Node, len(inputs))
+			for i, in := range inputs {
+				m, err := format.Parse(in)
+				if err != nil {
+					return fmt.Errorf("failed to parse input %d: %w", i+1, err)
+				}
+				trees[i] = nodes.New(m, 0, nodes.EmptyRepr)
+			}
+
 			diffTree, err := createDiffTree(
-				tree1, tree2,
-				WithKeyOne(key1),
-				WithKeyTwo(key2),
+				trees[0],
+				trees[1],
+				WithKeyOne(keys[0]),
+				WithKeyTwo(keys[1]),
+				WithNilValue(nilValue),
 			)
 			if err != nil {
 				return fmt.Errorf("failed to create diff tree: %w", err)
@@ -72,7 +75,7 @@ func NewDiffCmd() *cobra.Command {
 				return fmt.Errorf("failed to update tree repr: %w", err)
 			}
 			// add meta
-			diffTree, err = addMeta(diffTree, c, key1, key2)
+			diffTree, err = addMeta(diffTree, c, keys...)
 			if err != nil {
 				return fmt.Errorf("failed to add tree meta: %w", err)
 			}
@@ -105,9 +108,18 @@ func NewDiffCmd() *cobra.Command {
 	cmd.Flags().StringSliceVarP(&files, "file", "f", nil, "files to read data from")
 	cmd.Flags().StringVarP(&output, "out", "o", "", "what to output the diff to (defaults to tree display)")
 
-	cmd.Flags().StringSliceVarP(&keys, "key", "k", []string{"_f1", "_f2"}, "what to put as key in tree to denote this is from tree1")
+	cmd.Flags().StringSliceVarP(&keys, "key", "k", nil, "key to label each input in the diff (one per input, defaults to _f1.._fN)")
 	cmd.Flags().StringVar(&nilValue, "nilValue", "nil", "what to use as value for missing nodes in one tree")
 	return cmd
+}
+
+// defaultKeys returns the default label for each of n inputs: _f1, _f2, ... _fn.
+func defaultKeys(n int) []string {
+	keys := make([]string, n)
+	for i := range keys {
+		keys[i] = fmt.Sprintf("_f%d", i+1)
+	}
+	return keys
 }
 
 // nodesEquivalent compares two nodes and returns true if they are equal, false otherwise
@@ -116,6 +128,9 @@ func NewDiffCmd() *cobra.Command {
 func nodesEquivalent(n1, n2 *nodes.Node) bool {
 	if (n1 == nil) != (n2 == nil) {
 		return false
+	}
+	if n1 == nil && n2 == nil {
+		return true
 	}
 	n1IsLeaf := nodes.IsLeaf(n1)
 	n2IsLeaf := nodes.IsLeaf(n2)
@@ -342,25 +357,23 @@ func copyNode(n *nodes.Node) *nodes.Node {
 
 var defaultDiffColors = []string{"#ad0116", "#006222"}
 
-func addMeta(tree *nodes.Node, conf *tui.Config, key1 string, key2 string) (*nodes.Node, error) {
+func addMeta(tree *nodes.Node, conf *tui.Config, keys ...string) (*nodes.Node, error) {
 	colors := conf.DiffColors
-	if len(colors) < 2 {
+	if len(colors) < len(keys) {
+		// not enough configured colors; fall back to the defaults and cycle
+		// through them for any extra inputs.
 		colors = defaultDiffColors
 	}
 	var err error
-	tree, err = addNode(
-		tree, []string{nodes.MetaKey},
-		nodes.NewNode(key1, colors[0], 1, 0, nodes.LeafKeyAndValues),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add meta for %s: %w", key1, err)
-	}
-	tree, err = addNode(
-		tree, []string{nodes.MetaKey},
-		nodes.NewNode(key2, colors[1], 1, 0, nodes.LeafKeyAndValues),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add meta for %s: %w", key2, err)
+	for i, key := range keys {
+		color := colors[i%len(colors)]
+		tree, err = addNode(
+			tree, []string{nodes.MetaKey},
+			nodes.NewNode(key, color, 1, 0, nodes.LeafKeyAndValues),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add meta for %s: %w", key, err)
+		}
 	}
 	return tree, nil
 }

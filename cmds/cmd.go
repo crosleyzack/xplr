@@ -34,13 +34,17 @@ func New() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to parse config: %w", err)
 			}
-			// get data
-			data, err := getData(getSafe(args, 0), file)
+			// gather every operand from files, arguments and a piped stdin.
+			inputs, err := gatherInputs(args, []string{file}, os.Stdin)
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
+			if len(inputs) != 1 {
+				return fmt.Errorf("diff needs exactly one input, got %d", len(inputs))
+			}
+
 			// get data as map[string]any
-			m, err := format.Parse(data)
+			m, err := format.Parse(inputs[0])
 			if err != nil {
 				return fmt.Errorf("failed to parse data: %w", err)
 			}
@@ -60,28 +64,39 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func getData(args, file string) (data []byte, err error) {
-	if args != "" {
-		data = []byte(args)
-	} else if file != "" {
-		f, err := os.Open(file)
+// gatherInputs gathers operands in a stable order: one entry per file (in the
+// order given), then one per positional argument treated as inline data, then
+// stdin when it is piped and not empty. stdin is a parameter so callers can test
+// it without touching the real os.Stdin.
+func gatherInputs(args, files []string, stdin *os.File) ([][]byte, error) {
+	var out [][]byte
+	for _, f := range files {
+		b, err := os.ReadFile(f)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open data file: %w", err)
+			return nil, fmt.Errorf("failed to read file %s: %w", f, err)
 		}
-		data, err = io.ReadAll(f)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read file: %w", err)
-		}
-	} else {
-		data, err = io.ReadAll(os.Stdin)
+		out = append(out, b)
+	}
+	for _, a := range args {
+		out = append(out, []byte(a))
+	}
+	if piped(stdin) {
+		b, err := io.ReadAll(stdin)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read from pipe: %w", err)
 		}
+		if len(b) > 0 {
+			out = append(out, b)
+		}
 	}
-	if len(data) == 0 {
-		return nil, fmt.Errorf("no data")
-	}
-	return data, nil
+	return out, nil
+}
+
+// piped reports whether f is a pipe or redirect rather than an interactive
+// terminal, meaning it carries data to read.
+func piped(f *os.File) bool {
+	st, err := f.Stat()
+	return err == nil && st.Mode()&os.ModeCharDevice == 0
 }
 
 // renderTree takes in a config and a node tree and renders the TUI tree interface
@@ -104,12 +119,4 @@ func renderTree(conf *tui.Config, n *nodes.Node) error {
 		return err
 	}
 	return nil
-}
-
-func getSafe[T any](arr []T, idx int) T {
-	if idx < 0 || idx >= len(arr) {
-		var zero T
-		return zero
-	}
-	return arr[idx]
 }
