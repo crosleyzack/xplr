@@ -101,12 +101,12 @@ func (m *Model) GetMatchingNodes(searchTerm string) error {
 	}
 	m.searchResults = make([]*nodes.Node, 0)
 	m.searchNext, m.searchStop = iter.Pull(nodes.DFSIter(m.Root, func(node *nodes.Node) bool {
-		// match on leaf ndes which match search term
+		if out, err := regexp.Match(searchTerm, []byte(node.Key)); err == nil && out {
+			return true
+		}
+		// only match values for leaf nodes
 		if nodes.IsLeaf(node) {
 			if out, err := regexp.Match(searchTerm, []byte(node.Value)); err == nil && out {
-				return true
-			}
-			if out, err := regexp.Match(searchTerm, []byte(node.Key)); err == nil && out {
 				return true
 			}
 		}

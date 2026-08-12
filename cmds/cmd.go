@@ -71,6 +71,11 @@ func New() *cobra.Command {
 func gatherInputs(args, files []string, stdin *os.File) ([][]byte, error) {
 	var out [][]byte
 	for _, f := range files {
+		// an unset -f flag arrives as an empty string; skip it so stdin and
+		// positional arguments can still supply the data.
+		if f == "" {
+			continue
+		}
 		b, err := os.ReadFile(f)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read file %s: %w", f, err)
