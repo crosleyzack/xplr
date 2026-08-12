@@ -3,6 +3,7 @@ package cmds
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/crosleyzack/xplr/pkg/format"
 	"github.com/crosleyzack/xplr/pkg/nodes"
@@ -37,9 +38,8 @@ func NewDiffCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
-			if len(inputs) != 2 {
-				// TODO: relax once n diff implemented
-				return fmt.Errorf("diff needs exactly two inputs, got %d", len(inputs))
+			if len(inputs) < 2 {
+				return fmt.Errorf("diff needs at least two inputs, got %d", len(inputs))
 			}
 
 			// keys default to _f1.._fN; when supplied, one is required per input.
@@ -61,11 +61,8 @@ func NewDiffCmd() *cobra.Command {
 			}
 
 			diffTree, err := createDiffTree(
-				trees[0],
-				trees[1],
-				WithKeyOne(keys[0]),
-				WithKeyTwo(keys[1]),
-				WithNilValue(nilValue),
+				trees,
+				WithKeys(keys...),
 			)
 			if err != nil {
 				return fmt.Errorf("failed to create diff tree: %w", err)
@@ -122,15 +119,28 @@ func defaultKeys(n int) []string {
 	return keys
 }
 
-// nodesEquivalent compares two nodes and returns true if they are equal, false otherwise
-// in this case, we only compare the key and value of the nodes, not their children.
-// we will compare their children when we traverse the tree
-func nodesEquivalent(n1, n2 *nodes.Node) bool {
+// nodesEquivalent reports whether every given node is equivalent to the others.
+// We only compare the key and value of the nodes, not their children; the
+// children are compared separately while traversing the tree. Fewer than two
+// nodes are trivially equivalent.
+func nodesEquivalent(ns ...*nodes.Node) bool {
+	for i := 1; i < len(ns); i++ {
+		if !nodesEqual(ns[0], ns[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// nodesEqual reports whether two nodes are equivalent. A nil node means the path
+// was absent from that tree and is only equivalent to another absent node.
+func nodesEqual(n1, n2 *nodes.Node) bool {
+	if n1 == nil && n2 == nil {
+		// both absent from their trees: nothing differs between them.
+		return true
+	}
 	if (n1 == nil) != (n2 == nil) {
 		return false
-	}
-	if n1 == nil && n2 == nil {
-		return true
 	}
 	n1IsLeaf := nodes.IsLeaf(n1)
 	n2IsLeaf := nodes.IsLeaf(n2)
@@ -151,119 +161,136 @@ func nodesEquivalent(n1, n2 *nodes.Node) bool {
 }
 
 type diffConf struct {
-	KeyOne   string
-	KeyTwo   string
+	// Keys labels each tree in the diff output; Keys[i] is used for trees[i].
+	Keys     []string
 	NilValue string
 }
 
 func defaultDiffConf() *diffConf {
 	return &diffConf{
-		KeyOne:   "f1",
-		KeyTwo:   "f2",
+		Keys:     []string{"f1", "f2"},
 		NilValue: "nil",
 	}
 }
 
 type DiffTreeOption func(*diffConf)
 
-func WithKeyOne(key string) func(*diffConf) {
+// WithKeys sets the label used for each tree in the diff output. One key must be
+// provided per tree passed to createDiffTree.
+func WithKeys(keys ...string) DiffTreeOption {
 	return func(c *diffConf) {
-		c.KeyOne = key
+		c.Keys = keys
 	}
 }
 
-func WithKeyTwo(key string) func(*diffConf) {
-	return func(c *diffConf) {
-		c.KeyTwo = key
-	}
-}
-
-func WithNilValue(val string) func(*diffConf) {
+func WithNilValue(val string) DiffTreeOption {
 	return func(c *diffConf) {
 		c.NilValue = val
 	}
 }
 
-func createDiffTree(tree1, tree2 *nodes.Node, opts ...DiffTreeOption) (*nodes.Node, error) {
+func createDiffTree(trees []*nodes.Node, opts ...DiffTreeOption) (*nodes.Node, error) {
 	conf := defaultDiffConf()
 	for _, opt := range opts {
 		opt(conf)
 	}
-	// use dfs to hit every node, stopping the downward recusion
-	// when we find a difference
+	// keys[i] labels the node contributed by trees[i] in the diff tree, so one
+	// key is required per tree.
+	keys := conf.Keys
+	if len(keys) != len(trees) {
+		return nil, fmt.Errorf("need one key per tree: got %d keys for %d trees", len(keys), len(trees))
+	}
 	diffTree := nodes.New(map[string]any{}, 0, nodes.EmptyRepr)
-	shouldRecurse := true
-	err := nodes.DFS(
-		tree1,
-		func(n *nodes.Node, _ int) (err error) {
-			shouldRecurse = true
-			// path will never be empty, as we are traversing tree 1
-			// so we know it is in tree 1
-			path := nodes.GetPathToNode(n)
-			other, remaining := nodes.GetNodeFromPath(tree2, path)
-			switch {
-			case other == nil:
-				// this path is not in tree2 diverging from the root,
-				// add a new root node and set path to that key.
-				other = &nodes.Node{
-					ID:     uuid.New(),
-					Key:    path[0],
-					Value:  conf.NilValue,
-					Expand: false,
-				}
-				path = path[:1]
-				// get node from tree1 at this path
-				n, _ = nodes.GetNodeFromPath(tree1, path)
-			case len(remaining) > 0:
-				// this path is not in tree2, calculate where they
-				// diverge and get that node. Where they diverge
-				// is the first item in remaining
-				path = nodes.TrimPath(path, remaining[1:])
-				// set n to this divergent node
-				n, _ = nodes.GetNodeFromPath(tree1, path)
-				if n == nil {
-					return fmt.Errorf("this should never happen!")
-				}
-				// other is now a new node under the existing
-				// node other with no value
-				newLeaf := &nodes.Node{
-					ID:     uuid.New(),
-					Key:    n.Key,
-					Value:  conf.NilValue,
-					Parent: other,
-				}
-				other = newLeaf
+	// pruned holds diff-tree paths whose whole subtree is already recorded as a
+	// difference. DFSMulti still walks the descendants of any tree that has
+	// them, so we skip every path under a pruned prefix to avoid recording the
+	// same difference twice.
+	pruned := make(map[string]bool)
+	isPruned := func(path []string) bool {
+		for i := 1; i <= len(path); i++ {
+			if pruned[strings.Join(path[:i], "\x00")] {
+				return true
 			}
-			// if these nodes aren't equal, add to diff tree
-			if len(remaining) != 0 || !nodesEquivalent(n, other) {
-				// add to diff tree at path with value of n and other
-				nCopy := copyNode(n)
-				nCopy.Key = conf.KeyOne
-				diffTree, err = addNode(diffTree, path, nCopy)
+		}
+		return false
+	}
+	err := nodes.DFSMulti(
+		func(path []string, cnodes []nodes.ChildNode) error {
+			// the sentinel root holds no value to compare; always descend.
+			if len(path) == 0 {
+				return nil
+			}
+			// skip anything under a difference we have already recorded.
+			if isPruned(path) {
+				return nil
+			}
+			// resolve each tree's node at this path (nil when the path is
+			// absent from that tree).
+			resolved := make([]*nodes.Node, len(cnodes))
+			for i, cn := range cnodes {
+				if cn.Node != nil && len(cn.Rem) == 0 {
+					resolved[i] = cn.Node
+				}
+			}
+			// when every tree has an equivalent node there is no difference at
+			// this level; let DFSMulti descend to compare their children.
+			if nodesEquivalent(resolved...) {
+				return nil
+			}
+			// when at least two trees still share an equivalent non-leaf node,
+			// keep descending so their differing children are compared one level
+			// at a time. Any tree that is absent here stays absent (nil) on
+			// those deeper paths and surfaces at the leaves where a difference
+			// is recorded.
+			if canDescend(resolved) {
+				return nil
+			}
+			// record the difference: each tree contributes its node (or the nil
+			// value when the path is absent) under its key, then the whole
+			// subtree is pruned so it is not expanded further.
+			var err error
+			for i, node := range resolved {
+				add := copyNode(node)
+				if add == nil {
+					add = &nodes.Node{ID: uuid.New(), Value: conf.NilValue}
+				}
+				add.Key = keys[i]
+				diffTree, err = addNode(diffTree, path, add)
 				if err != nil {
 					return fmt.Errorf("failed to add node to diff tree: %w", err)
 				}
-				oCopy := copyNode(other)
-				oCopy.Key = conf.KeyTwo
-				diffTree, err = addNode(diffTree, path, oCopy)
-				if err != nil {
-					return fmt.Errorf("failed to add node to diff tree: %w", err)
-				}
-				shouldRecurse = false
 			}
+			// the whole subtree at this path is now recorded; do not expand it.
+			pruned[strings.Join(path, "\x00")] = true
 			return nil
 		},
-		nodes.WithNextNodes(func(n *nodes.Node) []*nodes.Node {
-			if shouldRecurse {
-				return n.Children.Arr()
-			}
-			return nil
-		}))
+		trees...,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to traverse tree: %w", err)
+		return nil, fmt.Errorf("failed to traverse trees: %w", err)
 	}
-	// TODO we need to apply nodes.LeafKeyAndValue repr to tree
 	return diffTree, nil
+}
+
+// canDescend reports whether at least two trees still hold an equivalent
+// non-leaf node at this path. When they do, the diff continues one level deeper
+// to compare their children rather than dumping whole subtrees. Leaf nodes and
+// paths held by fewer than two trees cannot be descended, so their difference is
+// recorded in place.
+func canDescend(ns []*nodes.Node) bool {
+	present := make([]*nodes.Node, 0, len(ns))
+	for _, n := range ns {
+		if n != nil {
+			present = append(present, n)
+		}
+	}
+	if len(present) < 2 {
+		return false
+	}
+	if !nodesEquivalent(present...) {
+		return false
+	}
+	return !nodes.IsLeaf(present[0])
 }
 
 func addNode(tree *nodes.Node, path []string, n *nodes.Node) (*nodes.Node, error) {
@@ -320,7 +347,10 @@ func addNode(tree *nodes.Node, path []string, n *nodes.Node) (*nodes.Node, error
 }
 
 func printOutput(diffTree *nodes.Node, formatter func(map[string]any) ([]byte, error)) error {
-	b, err := formatter(nodes.ToMap(diffTree))
+	// diffTree is a sentinel root with an empty key; passing it to ToMap would
+	// nest the whole output under a "" key. Map its children directly instead so
+	// the top-level entries sit at the document root.
+	b, err := formatter(nodes.ToMap(diffTree.Children.Arr()...))
 	if err != nil {
 		return fmt.Errorf("failed to convert diff tree to json: %w", err)
 	}
@@ -355,7 +385,7 @@ func copyNode(n *nodes.Node) *nodes.Node {
 	}
 }
 
-var defaultDiffColors = []string{"#ad0116", "#006222"}
+var defaultDiffColors = []string{"#ad0116", "#006222", "#38DB89", "#61707D", "#9D69A3"}
 
 func addMeta(tree *nodes.Node, conf *tui.Config, keys ...string) (*nodes.Node, error) {
 	colors := conf.DiffColors

@@ -35,6 +35,16 @@ func TestNodesEquivalent(t *testing.T) {
 	}{
 		// pairwise cases
 		{
+			name:     "empty slice is equivalent",
+			nodes:    nil,
+			expected: true,
+		},
+		{
+			name:     "single node is equivalent",
+			nodes:    []*nodes.Node{leaf("x", "1")},
+			expected: true,
+		},
+		{
 			name:     "equal leaf nodes",
 			nodes:    []*nodes.Node{leaf("x", "v"), leaf("x", "v")},
 			expected: true,
@@ -79,11 +89,21 @@ func TestNodesEquivalent(t *testing.T) {
 			nodes:    []*nodes.Node{nonLeaf("x", leaf("c", "v")), nonLeaf("x", leaf("c", "v"))},
 			expected: true,
 		},
+		{
+			name:     "all equal leaves",
+			nodes:    []*nodes.Node{leaf("x", "1"), leaf("x", "1"), leaf("x", "1")},
+			expected: true,
+		},
+		{
+			name:     "one differing value among three",
+			nodes:    []*nodes.Node{leaf("x", "1"), leaf("x", "1"), leaf("x", "2")},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, nodesEquivalent(tt.nodes[0], tt.nodes[1]))
+			assert.Equal(t, tt.expected, nodesEquivalent(tt.nodes...))
 		})
 	}
 }
@@ -250,6 +270,8 @@ func TestCreateDiffTree(t *testing.T) {
 		{
 			// m1: {"foo": {"0": [1, 2], "1": [2, 3]}}
 			// m2: {"foo": {"0": [1], "2": [3]}}
+			// DFSMulti walks the union of paths, so "2" (present only in m2)
+			// now appears in the diff.
 			name: "complex",
 			m1:   map[string]any{"foo": map[string]any{"0": []any{1, 2}, "1": []any{2, 3}}},
 			m2:   map[string]any{"foo": map[string]any{"0": []any{1}, "2": []any{3}}},
@@ -265,11 +287,10 @@ func TestCreateDiffTree(t *testing.T) {
 						"f1": map[string]any{"0": "2", "1": "3"},
 						"f2": "nil",
 					},
-					// TODO this is impossible with current impl
-					// "2": map[string]any{
-					// 	"f1": "nil",
-					// 	"f2": map[string]any{"0": "3"},
-					// },
+					"2": map[string]any{
+						"f1": "nil",
+						"f2": map[string]any{"0": "3"},
+					},
 				},
 			},
 		},
@@ -279,7 +300,7 @@ func TestCreateDiffTree(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tree1 := nodes.New(tt.m1, 0, nodes.EmptyRepr)
 			tree2 := nodes.New(tt.m2, 0, nodes.EmptyRepr)
-			diff, err := createDiffTree(tree1, tree2)
+			diff, err := createDiffTree([]*nodes.Node{tree1, tree2})
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, nodes.ToMap(diff.Children.Arr()...))
 		})
@@ -335,6 +356,14 @@ func TestGatherInputs(t *testing.T) {
 		},
 		{
 			name:     "stdin only",
+			useStdin: true,
+			want:     [][]byte{[]byte("SSS")},
+		},
+		{
+			// the unset -f flag arrives as an empty string; it must be
+			// skipped so a piped stdin still supplies the data.
+			name:     "empty file flag is skipped for stdin",
+			files:    []string{""},
 			useStdin: true,
 			want:     [][]byte{[]byte("SSS")},
 		},
@@ -433,7 +462,7 @@ func TestAddMeta(t *testing.T) {
 			want: map[string]string{
 				"_f1": defaultDiffColors[0],
 				"_f2": defaultDiffColors[1],
-				"_f3": defaultDiffColors[0],
+				"_f3": defaultDiffColors[2],
 			},
 		},
 	}
@@ -447,6 +476,105 @@ func TestAddMeta(t *testing.T) {
 			assert.Equal(t, tt.want, metaColors(tree))
 		})
 	}
+}
+
+func TestCreateDiffTreeThreeTrees(t *testing.T) {
+	tests := []struct {
+		name     string
+		maps     []map[string]any
+		expected map[string]any
+	}{
+		{
+			name:     "identical trees produce empty diff",
+			maps:     []map[string]any{{"a": 1}, {"a": 1}, {"a": 1}},
+			expected: map[string]any{},
+		},
+		{
+			// only the second tree differs at leaf "a".
+			name: "single leaf differs across trees",
+			maps: []map[string]any{{"a": 1}, {"a": 2}, {"a": 1}},
+			expected: map[string]any{
+				"a": map[string]any{"f1": "1", "f2": "2", "f3": "1"},
+			},
+		},
+		{
+			// two trees agree, the third differs at a nested leaf.
+			name: "two trees agree third differs",
+			maps: []map[string]any{
+				{"a": map[string]any{"b": 1}},
+				{"a": map[string]any{"b": 1}},
+				{"a": map[string]any{"b": 2}},
+			},
+			expected: map[string]any{
+				"a": map[string]any{
+					"b": map[string]any{"f1": "1", "f2": "1", "f3": "2"},
+				},
+			},
+		},
+		{
+			// t3 lacks "a" entirely, so t1 and t2 keep descending and their
+			// difference at a.y is pinpointed while t3 shows nil at a's leaves.
+			// "b" exists only in t3.
+			name: "missing key keeps the other two descending",
+			maps: []map[string]any{
+				{"a": map[string]any{"x": 1, "y": 2}},
+				{"a": map[string]any{"x": 1, "y": 9}},
+				{"b": 5},
+			},
+			expected: map[string]any{
+				"a": map[string]any{
+					"x": map[string]any{"f1": "1", "f2": "1", "f3": "nil"},
+					"y": map[string]any{"f1": "2", "f2": "9", "f3": "nil"},
+				},
+				"b": map[string]any{"f1": "nil", "f2": "nil", "f3": "5"},
+			},
+		},
+		{
+			// the third tree has a leaf where the others have a map, so the
+			// whole subtree is dumped for each tree at "a".
+			name: "structural divergence dumps subtrees",
+			maps: []map[string]any{
+				{"a": map[string]any{"b": 1}},
+				{"a": map[string]any{"b": 1}},
+				{"a": 5},
+			},
+			expected: map[string]any{
+				"a": map[string]any{
+					"f1": map[string]any{"b": "1"},
+					"f2": map[string]any{"b": "1"},
+					"f3": "5",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			trees := make([]*nodes.Node, len(tt.maps))
+			for i, m := range tt.maps {
+				trees[i] = nodes.New(m, 0, nodes.EmptyRepr)
+			}
+			diff, err := createDiffTree(trees, WithKeys("f1", "f2", "f3"))
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, nodes.ToMap(diff.Children.Arr()...))
+		})
+	}
+}
+
+func TestCreateDiffTreeKeyCountMismatch(t *testing.T) {
+	// the default config carries two keys, so passing a single tree (or three)
+	// must fail rather than index past the keys slice.
+	one := []*nodes.Node{nodes.New(map[string]any{"a": 1}, 0, nodes.EmptyRepr)}
+	_, err := createDiffTree(one)
+	require.Error(t, err)
+
+	three := []*nodes.Node{
+		nodes.New(map[string]any{"a": 1}, 0, nodes.EmptyRepr),
+		nodes.New(map[string]any{"a": 1}, 0, nodes.EmptyRepr),
+		nodes.New(map[string]any{"a": 1}, 0, nodes.EmptyRepr),
+	}
+	_, err = createDiffTree(three, WithKeys("f1", "f2"))
+	require.Error(t, err)
 }
 
 func TestUpdateRepr(t *testing.T) {

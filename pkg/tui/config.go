@@ -3,6 +3,7 @@ package tui
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -51,15 +52,15 @@ func NewConfig() (*Config, error) {
 	var c Config
 	if _, err := os.Stat(path); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			fmt.Printf("path doesn't exist %s\n", path)
+			slog.Warn(fmt.Sprintf("path doesn't exist %s\n", path))
 			return &c, nil
 		}
-		fmt.Printf("failed to stat %s\n", path)
+		slog.Error(fmt.Sprintf("failed to stat %s\n", path))
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
 	_, err := toml.DecodeFile(path, &c)
 	if err != nil {
-		fmt.Printf("failed to read %s\n", path)
+		slog.Error(fmt.Sprintf("failed to read %s\n", path))
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 	return &c, nil
