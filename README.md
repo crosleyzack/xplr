@@ -10,7 +10,7 @@ Xplr allows you explore tree-based file formats as an interactive TUI tree. This
 
 <img alt="example" src="./assets/demo.gif" width="600px" /></p>
 
-It can also be used to compare two tree-based formats in an interactive TUI or output the diff to another file.
+It can also be used to compare 2+ tree-based formats in an interactive TUI or output the diff to another file.
 
 <img alt="example" src="./assets/diff.gif" width="600px" /></p>
 
@@ -95,6 +95,6 @@ NextKeys = ["n"]
 Xplr tree view can be embedded in your own application by:
 
 1. Convert your data to a `map[string]any` type. Examples exist in the `pkg/format` package for JSON, YAML, and TOML.
-2. Call `pkg/nodes.New` to convert your `map[string]any` to a `[]nodes.Nodes` tree.
-3. Call `pkg/modules/tree.New` with the `[]nodes.Nodes` tree as well as your desired `pkg/modules/tree.TreeFormat`, `pkg/keys.KeyMap`, and `pkg/style.Style` to create the tree view bubbletea tree module.
+2. Call `pkg/nodes.New` to convert your `map[string]any` to a `*nodes.Node` tree.
+3. Call `pkg/modules/tree.New` with the `*nodes.Node` tree as well as your desired `pkg/modules/tree.TreeFormat`, `pkg/keys.KeyMap`, and `pkg/styles.Style` to create the tree view bubbletea tree module.
 4. Create a new [bubbletea program](https://pkg.go.dev/github.com/charmbracelet/bubbletea#NewProgram) with the tree module, or add the tree module to your existing bubbletea program.
