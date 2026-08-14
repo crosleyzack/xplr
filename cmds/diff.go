@@ -20,7 +20,7 @@ func NewDiffCmd() *cobra.Command {
 	var output string
 	var nilValue string
 	cmd := &cobra.Command{
-		Use:     "diff []",
+		Use:     "diff [-f <file>]... [data]...",
 		Aliases: []string{"d"},
 		Version: "0.2.5",
 		Short:   "Diff two or more tree data files with a TUI graphical interface",
@@ -77,7 +77,7 @@ func NewDiffCmd() *cobra.Command {
 				return fmt.Errorf("failed to add tree meta: %w", err)
 			}
 
-			// TODO output diff tree to output
+			// output the diff tree in the requested format, or render the TUI.
 			switch output {
 			case "json":
 				err := printOutput(diffTree, format.AsJson)

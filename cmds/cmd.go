@@ -40,7 +40,7 @@ func New() *cobra.Command {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
 			if len(inputs) != 1 {
-				return fmt.Errorf("diff needs exactly one input, got %d", len(inputs))
+				return fmt.Errorf("xplr needs exactly one input, got %d", len(inputs))
 			}
 
 			// get data as map[string]any
