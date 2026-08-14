@@ -22,7 +22,7 @@ func NewDiffCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "diff []",
 		Aliases: []string{"d"},
-		Version: "0.2.5",
+		Version: "0.3.1",
 		Short:   "Diff two or more tree data files with a TUI graphical interface",
 		Long:    "Takes in two or more tree data sources (JSON, YAML, TOML) via file flags, positional arguments, or a piped stdin and compares them.",
 		Example: "xplr diff -f foo.json -f bar.json",
@@ -63,6 +63,7 @@ func NewDiffCmd() *cobra.Command {
 			diffTree, err := createDiffTree(
 				trees,
 				WithKeys(keys...),
+				WithNilValue(nilValue),
 			)
 			if err != nil {
 				return fmt.Errorf("failed to create diff tree: %w", err)
