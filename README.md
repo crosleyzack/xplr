@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/github/license/crosleyzack/xplr?color=blue)](https://github.com/CrosleyZack/xplr/blob/main/LICENSE)
 [![Release](https://img.shields.io/github/v/release/crosleyzack/xplr?include_prereleases)](https://github.com/crosleyzack/xplr/releases)
 [![CI](https://github.com/CrosleyZack/xplr/actions/workflows/gotest.yaml/badge.svg)](https://github.com/crosleyzack/xplr/actions?workflow=gotest)
+[![Go Reference](https://pkg.go.dev/badge/github.com/crosleyzack/xplr.svg)](https://pkg.go.dev/github.com/crosleyzack/xplr)
 
 Xplr allows you explore tree-based file formats as an interactive TUI tree. This currently supports JSON, YAML, and TOML files.
 
