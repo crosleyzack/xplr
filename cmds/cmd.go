@@ -1,3 +1,4 @@
+// Package cmds defines the command-line interface commands for xplr.
 package cmds
 
 import (

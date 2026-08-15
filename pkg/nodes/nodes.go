@@ -1,3 +1,5 @@
+// Package nodes defines the tree data structure used to represent and
+// traverse hierarchical data in xplr.
 package nodes
 
 import (

@@ -1,3 +1,4 @@
+// Package keys defines the key bindings and keymaps used by the xplr TUI.
 package keys
 
 import "github.com/charmbracelet/bubbles/key"

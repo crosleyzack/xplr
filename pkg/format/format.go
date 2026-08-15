@@ -1,3 +1,5 @@
+// Package format provides utilities for converting between JSON, YAML,
+// TOML, and plain-text representations of data.
 package format
 
 import (

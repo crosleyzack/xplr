@@ -1,3 +1,4 @@
+// Package tree implements the bubbletea model for rendering a tree view.
 package tree
 
 import (
