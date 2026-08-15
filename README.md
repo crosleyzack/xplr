@@ -1,4 +1,4 @@
-<p align="center"><img alt="xplr" src="./assets/xplr.png" width="300px" /></p>
+<p align="center"><img alt="wndr" src="./assets/wndr.png" width="300px" /></p>
 
 ---
 
