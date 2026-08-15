@@ -1,3 +1,4 @@
+// Package tui implements the terminal user interface for xplr.
 package tui
 
 import (

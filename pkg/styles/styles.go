@@ -1,3 +1,4 @@
+// Package styles provides lipgloss-based styling for the xplr user interface.
 package styles
 
 import (
