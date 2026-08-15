@@ -18,13 +18,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// version is set at build time via -ldflags "-X .../cmds.version=...".
+var version = "0.0.1"
+
 func New() *cobra.Command {
 	var layers uint
 	var nodeValueRepr string
 	var file string
 	cmd := &cobra.Command{
 		Use:     "xplr [-x <layers>] [-f <file> | data]",
-		Version: "0.3.1",
+		Version: version,
 		Short:   "Explore a tree data file with a TUI graphical interface",
 		Long:    "Takes in a tree data file (JSON, YAML, TOML) either via flag parameter, first argument, or stdin and produces TUI navigable tree to view and explore the data",
 		Example: "xplr -x 2 -f foo.json",

@@ -14,9 +14,9 @@
       {
         packages.default = pkgs.buildGoModule {
           pname = "xplr";
-          version = "0.2.5";
+          version = "0.3.3";
           src = ./.;
-          vendorHash = "sha256-ECWzWOktoOahA1d09ofQmI7zdnVZcvRaTv2kGSKYwdc=";
+          vendorHash = "sha256-vQNkSt0g60lrqTInFYoLjXx1QUkKiieG60PBvZ6YNNo=";
         };
 
         devShells.default = pkgs.mkShell {
