@@ -17,12 +17,12 @@ builds:
       - windows_amd64
 
 archives:
-  - format: tar.gz
+  - formats: ["tar.gz"]
     # this is default since 1.17
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ["zip"]
 
 checksum:
   name_template: "checksums.txt"
