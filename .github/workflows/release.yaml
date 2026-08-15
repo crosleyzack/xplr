@@ -22,12 +22,6 @@ jobs:
         with:
           go-version: 1.25
 
-      - name: Sync flake.nix version to tag
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          sed -i "s/version = \"[0-9][0-9.]*\";/version = \"$VERSION\";/" flake.nix
-          grep -n 'version = ' flake.nix
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
