@@ -1,6 +1,7 @@
 package diff
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -442,6 +443,71 @@ func TestCreateDiffTreeThreeTrees(t *testing.T) {
 			diff, err := createDiffTree(trees, conf)
 			require.NoError(t, err)
 			require.Equal(t, tt.expected, nodes.ToMap(diff.Children.Arr()...))
+		})
+	}
+}
+
+func TestEveryNodeHasSentinelAncestor(t *testing.T) {
+	// The in-memory diff tree must be fully self-contained: every node reachable
+	// through Children must have the diff tree's sentinel root as an ancestor
+	// when following Parent. A parent chain that instead escapes back into the
+	// source trees (as happens when dumped subtrees are shallow-copied) breaks
+	// Ancestor-based styling of a diff entry's descendants.
+	cases := []struct {
+		name string
+		maps []map[string]any
+	}{
+		{
+			name: "structural divergence dumps subtrees",
+			maps: []map[string]any{
+				{"a": map[string]any{"b": 1}},
+				{"a": 5},
+			},
+		},
+		{
+			name: "missing key keeps the other two descending",
+			maps: []map[string]any{
+				{"a": map[string]any{"x": 1, "y": 2}},
+				{"a": map[string]any{"x": 1, "y": 9}},
+				{"b": 5},
+			},
+		},
+		{
+			name: "nested structural divergence",
+			maps: []map[string]any{
+				{"foo": []any{map[string]any{"bar": map[string]any{"baz": []any{1, 2}}}}},
+				{"foo": []any{map[string]any{"bar": map[string]any{"baz": []any{1, 3}}}}},
+				{"foo": 5},
+			},
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			trees := make([]*nodes.Node, len(tt.maps))
+			keys := make([]string, len(tt.maps))
+			for i, m := range tt.maps {
+				trees[i] = nodes.New(m, 0, nodes.EmptyRepr)
+				keys[i] = fmt.Sprintf("f%d", i+1)
+			}
+			diff, err := Diff(trees, WithKeys(keys...), WithNilValue("nil"))
+			require.NoError(t, err)
+
+			err = nodes.DFS(diff, func(n *nodes.Node, _ int) error {
+				// follow Parent until the sentinel root (the only node with a
+				// nil parent) is reached; a chain that escapes the diff tree
+				// ends in a nil current instead.
+				seen := make(map[*nodes.Node]bool)
+				for current := n; current != nil; current = current.Parent {
+					if current.Equal(diff) {
+						return nil
+					}
+					require.False(t, seen[current], "cycle in parent chain at %v", nodes.GetPathToNode(n))
+					seen[current] = true
+				}
+				t.Errorf("node %v does not have the sentinel root as an ancestor", nodes.GetPathToNode(n))
+				return nil
+			}, nodes.WithNextNodes(nodes.AllChildren))
+			require.NoError(t, err)
 		})
 	}
 }
