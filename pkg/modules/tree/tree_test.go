@@ -17,7 +17,7 @@ func TestDefaultFormat(t *testing.T) {
 	assert.Equal(t, "❭ ", f.ExpandableShape)
 	assert.Equal(t, "╰─", f.ExpandedShape)
 	assert.Equal(t, 2, f.SpacesPerLayer)
-	assert.Equal(t, 4, f.SpacesAfterKey)
+	assert.Equal(t, 8, f.SpacesAfterKey)
 	assert.False(t, f.HideSummaryWhenExpanded)
 }
 

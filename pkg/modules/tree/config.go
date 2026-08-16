@@ -52,6 +52,6 @@ func DefaultFormat() *TreeFormat {
 		ExpandedShape:           "╰─",
 		SpacesPerLayer:          2,
 		HideSummaryWhenExpanded: false,
-		SpacesAfterKey:          4,
+		SpacesAfterKey:          8,
 	}
 }
