@@ -16,7 +16,6 @@ Sleep 1s
 Enter
 Sleep 0.5s
 Type "G"
-Enter
 Sleep 0.5s
 Tab
 Sleep 0.5s
