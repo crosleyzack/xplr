@@ -292,11 +292,13 @@ func updateRepr(tree *nodes.Node, f nodes.ReprNode) error {
 	)
 }
 
+// copyNode returns a shallow copy of n. This will corrupt the original tree,
+// but this is fine for our use case and keeps the code efficient.
 func copyNode(n *nodes.Node) *nodes.Node {
 	if n == nil {
 		return nil
 	}
-	return &nodes.Node{
+	c := &nodes.Node{
 		ID:       uuid.New(),
 		Key:      n.Key,
 		Value:    n.Value,
@@ -304,6 +306,10 @@ func copyNode(n *nodes.Node) *nodes.Node {
 		Parent:   n.Parent,
 		Children: n.Children,
 	}
+	for _, child := range c.Children.Iter() {
+		child.Parent = c
+	}
+	return c
 }
 
 // addMeta
