@@ -3,7 +3,7 @@ package nodes
 import (
 	"testing"
 
-	"github.com/crosleyzack/xplr/pkg/omap"
+	"github.com/crosleyzack/wndr/pkg/omap"
 	"github.com/stretchr/testify/assert"
 )
 

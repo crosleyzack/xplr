@@ -1,4 +1,4 @@
-// Package tui implements the terminal user interface for xplr.
+// Package tui implements the terminal user interface for wndr.
 package tui
 
 import (
@@ -9,10 +9,10 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/term"
-	"github.com/crosleyzack/xplr/pkg/keys"
-	"github.com/crosleyzack/xplr/pkg/modules/tree"
-	"github.com/crosleyzack/xplr/pkg/nodes"
-	"github.com/crosleyzack/xplr/pkg/styles"
+	"github.com/crosleyzack/wndr/pkg/keys"
+	"github.com/crosleyzack/wndr/pkg/modules/tree"
+	"github.com/crosleyzack/wndr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/styles"
 )
 
 // Model for the JSON tree

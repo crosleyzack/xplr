@@ -1,4 +1,4 @@
-# NOTE: use `nix develop .` to ensure you are using the latest xplr code for demo
+# NOTE: use `nix develop .` to ensure you are using the latest wndr code for demo
 Output diff.gif
 
 Set FontSize 20
@@ -8,7 +8,7 @@ Set Padding 1
 
 Hide
 Set TypingSpeed 0
-Type "xplr diff -f <(curl -sS https://pokeapi.co/api/v2/pokemon/155) -f <(curl -sS https://pokeapi.co/api/v2/pokemon/156) -f <(curl -sS https://pokeapi.co/api/v2/pokemon/157) -k _cynd -k _quil -k _typh"
+Type "wndr diff -f <(curl -sS https://pokeapi.co/api/v2/pokemon/155) -f <(curl -sS https://pokeapi.co/api/v2/pokemon/156) -f <(curl -sS https://pokeapi.co/api/v2/pokemon/157) -k _cynd -k _quil -k _typh"
 Show
 
 Set TypingSpeed 0.2

@@ -9,13 +9,13 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/Netflix/go-env"
-	"github.com/crosleyzack/xplr/pkg/keys"
-	"github.com/crosleyzack/xplr/pkg/modules/tree"
-	"github.com/crosleyzack/xplr/pkg/styles"
+	"github.com/crosleyzack/wndr/pkg/keys"
+	"github.com/crosleyzack/wndr/pkg/modules/tree"
+	"github.com/crosleyzack/wndr/pkg/styles"
 )
 
 type configLoc struct {
-	FileLoc   string `env:"XPLR_CONFIG"`
+	FileLoc   string `env:"WNDR_CONFIG"`
 	ConfigDir string `env:"XDG_CONFIG_HOME"`
 }
 
@@ -26,7 +26,7 @@ type Config struct {
 }
 
 const (
-	configPath = "/xplr/config.toml"
+	configPath = "/wndr/config.toml"
 )
 
 // NewConfig creates a new Config object

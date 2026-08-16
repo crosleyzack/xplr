@@ -10,7 +10,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/nodes"
 	"github.com/tiagomelo/go-clipboard/clipboard"
 )
 

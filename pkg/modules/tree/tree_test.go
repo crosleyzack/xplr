@@ -3,9 +3,9 @@ package tree
 import (
 	"testing"
 
-	"github.com/crosleyzack/xplr/pkg/keys"
-	"github.com/crosleyzack/xplr/pkg/nodes"
-	"github.com/crosleyzack/xplr/pkg/styles"
+	"github.com/crosleyzack/wndr/pkg/keys"
+	"github.com/crosleyzack/wndr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/styles"
 	"github.com/stretchr/testify/assert"
 )
 

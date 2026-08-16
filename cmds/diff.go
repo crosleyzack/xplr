@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/crosleyzack/xplr/pkg/diff"
-	"github.com/crosleyzack/xplr/pkg/format"
-	"github.com/crosleyzack/xplr/pkg/nodes"
-	"github.com/crosleyzack/xplr/pkg/tui"
+	"github.com/crosleyzack/wndr/pkg/diff"
+	"github.com/crosleyzack/wndr/pkg/format"
+	"github.com/crosleyzack/wndr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ func NewDiffCmd() *cobra.Command {
 		Version: version,
 		Short:   "Diff two or more tree data files with a TUI graphical interface",
 		Long:    "Takes in two or more tree data sources (JSON, YAML, TOML) via file flags, positional arguments, or a piped stdin and compares them.",
-		Example: "xplr diff -f foo.json -f bar.json",
+		Example: "wndr diff -f foo.json -f bar.json",
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			// get config

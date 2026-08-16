@@ -1,11 +1,11 @@
 // Package nodes defines the tree data structure used to represent and
-// traverse hierarchical data in xplr.
+// traverse hierarchical data in wndr.
 package nodes
 
 import (
 	"strconv"
 
-	"github.com/crosleyzack/xplr/pkg/omap"
+	"github.com/crosleyzack/wndr/pkg/omap"
 	"github.com/google/uuid"
 )
 

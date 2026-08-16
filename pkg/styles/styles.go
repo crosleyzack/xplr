@@ -1,4 +1,4 @@
-// Package styles provides lipgloss-based styling for the xplr user interface.
+// Package styles provides lipgloss-based styling for the wndr user interface.
 package styles
 
 import (

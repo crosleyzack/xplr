@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/nodes"
 )
 
 // siblingMaxKeyWidth calculates the maximum key width among siblings

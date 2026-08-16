@@ -6,7 +6,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// StyleConfig defines the style information for the xplr tui
+// StyleConfig defines the style information for the wndr tui
 type StyleConfig struct {
 	ExpandedShapeColor        string
 	ExpandableShapeColor      string
