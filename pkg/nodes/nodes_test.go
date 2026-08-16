@@ -48,6 +48,21 @@ func TestMakeNode(t *testing.T) {
 				&Node{Key: "2", Value: "c", Expand: true},
 			)},
 		},
+		{
+			name:  "map value sets Value via repr",
+			key:   "map",
+			value: map[string]any{"b": "2", "a": "1"},
+			expected: Node{Key: "map", Value: "1 2", Expand: true, Children: childMap(
+				&Node{Key: "a", Value: "1", Expand: true},
+				&Node{Key: "b", Value: "2", Expand: true},
+			)},
+		},
+		{
+			name:     "empty map value",
+			key:      "map",
+			value:    map[string]any{},
+			expected: Node{Key: "map", Value: "{}", Expand: true, Children: childMap()},
+		},
 	}
 
 	for _, tt := range tests {

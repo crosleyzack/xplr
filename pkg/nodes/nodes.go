@@ -171,7 +171,7 @@ func NewNode(key string, value any, layer uint, displayLayers uint, repr ReprNod
 			addChild(node, n)
 		}
 		node.Value = "[]"
-		if len(v) > 0 {
+		if node.Children.Len() > 0 {
 			node.Value = repr(node)
 		}
 	case map[string]any:
@@ -179,6 +179,10 @@ func NewNode(key string, value any, layer uint, displayLayers uint, repr ReprNod
 		// layer deeper.
 		node = makeTree(v, layer, displayLayers, repr)
 		node.Key = key
+		node.Value = "{}"
+		if node.Children.Len() > 0 {
+			node.Value = repr(node)
+		}
 	}
 	return node
 }
