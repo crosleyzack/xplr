@@ -1,4 +1,4 @@
-// Package cmds defines the command-line interface commands for xplr.
+// Package cmds defines the command-line interface commands for wndr.
 package cmds
 
 import (
@@ -9,12 +9,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/crosleyzack/xplr/pkg/format"
-	"github.com/crosleyzack/xplr/pkg/keys"
-	"github.com/crosleyzack/xplr/pkg/modules/tree"
-	"github.com/crosleyzack/xplr/pkg/nodes"
-	"github.com/crosleyzack/xplr/pkg/styles"
-	"github.com/crosleyzack/xplr/pkg/tui"
+	"github.com/crosleyzack/wndr/pkg/format"
+	"github.com/crosleyzack/wndr/pkg/keys"
+	"github.com/crosleyzack/wndr/pkg/modules/tree"
+	"github.com/crosleyzack/wndr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/styles"
+	"github.com/crosleyzack/wndr/pkg/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -26,11 +26,11 @@ func New() *cobra.Command {
 	var nodeValueRepr string
 	var file string
 	cmd := &cobra.Command{
-		Use:     "xplr [-x <layers>] [-f <file> | data]",
+		Use:     "wndr [-x <layers>] [-f <file> | data]",
 		Version: version,
 		Short:   "Explore a tree data file with a TUI graphical interface",
 		Long:    "Takes in a tree data file (JSON, YAML, TOML) either via flag parameter, first argument, or stdin and produces TUI navigable tree to view and explore the data",
-		Example: "xplr -x 2 -f foo.json",
+		Example: "wndr -x 2 -f foo.json",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			// get config
@@ -44,7 +44,7 @@ func New() *cobra.Command {
 				return fmt.Errorf("failed to get data: %w", err)
 			}
 			if len(inputs) != 1 {
-				return fmt.Errorf("xplr needs exactly one input, got %d", len(inputs))
+				return fmt.Errorf("wndr needs exactly one input, got %d", len(inputs))
 			}
 
 			// get data as map[string]any

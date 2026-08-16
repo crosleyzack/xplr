@@ -2,16 +2,16 @@
 
 ---
 
-[![License](https://img.shields.io/github/license/crosleyzack/xplr?color=blue)](https://github.com/CrosleyZack/xplr/blob/main/LICENSE)
-[![Release](https://img.shields.io/github/v/release/crosleyzack/xplr?include_prereleases)](https://github.com/crosleyzack/xplr/releases)
-[![CI](https://github.com/CrosleyZack/xplr/actions/workflows/gotest.yaml/badge.svg)](https://github.com/crosleyzack/xplr/actions?workflow=gotest)
-[![Go Reference](https://pkg.go.dev/badge/github.com/crosleyzack/xplr.svg)](https://pkg.go.dev/github.com/crosleyzack/xplr)
+[![License](https://img.shields.io/github/license/crosleyzack/wndr?color=blue)](https://github.com/CrosleyZack/wndr/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/crosleyzack/wndr?include_prereleases)](https://github.com/crosleyzack/wndr/releases)
+[![CI](https://github.com/CrosleyZack/wndr/actions/workflows/gotest.yaml/badge.svg)](https://github.com/crosleyzack/wndr/actions?workflow=gotest)
+[![Go Reference](https://pkg.go.dev/badge/github.com/crosleyzack/wndr.svg)](https://pkg.go.dev/github.com/crosleyzack/wndr)
 
-Xplr allows you explore tree-based file formats as an interactive TUI tree. This currently supports JSON, YAML, and TOML files.
+wndr (wander) allows you explore tree-based file formats as an interactive TUI tree. This supports JSON, YAML, and TOML files.
 
 <img alt="example" src="./assets/demo.gif" width="600px" /></p>
 
-It can also be used to compare 2+ tree-based formats in an interactive TUI or output the diff to another file.
+It can also be used to compare two or more tree-based formats in an interactive TUI or output the diff to another file.
 
 <img alt="example" src="./assets/diff.gif" width="600px" /></p>
 
@@ -20,7 +20,7 @@ It can also be used to compare 2+ tree-based formats in an interactive TUI or ou
 Can be installed using Go 1.23+ via:
 
 ```bash
-go install github.com/crosleyzack/xplr@latest
+go install github.com/crosleyzack/wndr@latest
 ```
 
 It can also be installed as a nix flake using
@@ -29,34 +29,34 @@ It can also be installed as a nix flake using
 nix build
 ```
 
-which will write the binary to `./result/bin/xplr`
+which will write the binary to `./result/bin/wndr`
 
 ## Examples
 
-Xplr can take in data by providing a data file:
+wndr can take in data by providing a data file:
 
 ```bash
-xplr -f foo.toml
+wndr -f foo.toml
 ```
 
 or by passing it as the first argument:
 
 ```bash
-xplr "{\"foo\": \"bar\"}"
+wndr "{\"foo\": \"bar\"}"
 ```
 
 or finally via stdin:
 
 ```bash
-cat bar.yml | xplr -x 1
+cat bar.yml | wndr -x 1
 ```
 
 ## Configuration
 
-Xplr will search for a configuration toml file at:
+wndr will search for a configuration toml file at:
 
-1. $XPLR_CONFIG
-2. $XDG_CONFIG_HOME/xplr/config.toml
+1. $WNDR_CONFIG
+2. $XDG_CONFIG_HOME/wndr/config.toml
 
 Configuration options include:
 
@@ -93,7 +93,7 @@ NextKeys = ["n"]
 
 ## Tree View in your TUI
 
-Xplr tree view can be embedded in your own application by:
+wndr tree view can be embedded in your own application by:
 
 1. Convert your data to a `map[string]any` type. Examples exist in the `pkg/format` package for JSON, YAML, and TOML.
 2. Call `pkg/nodes.New` to convert your `map[string]any` to a `*nodes.Node` tree.

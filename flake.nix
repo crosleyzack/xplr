@@ -1,5 +1,5 @@
 {
-  description = "flake install for xplr tui tree viewer";
+  description = "flake install for wndr tui tree viewer";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -13,7 +13,7 @@
       in
       {
         packages.default = pkgs.buildGoModule {
-          pname = "xplr";
+          pname = "wndr";
           version = "9.9.9";
           src = ./.;
           vendorHash = "sha256-vQNkSt0g60lrqTInFYoLjXx1QUkKiieG60PBvZ6YNNo=";

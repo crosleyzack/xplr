@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/crosleyzack/xplr/pkg/keys"
-	"github.com/crosleyzack/xplr/pkg/nodes"
-	"github.com/crosleyzack/xplr/pkg/styles"
+	"github.com/crosleyzack/wndr/pkg/keys"
+	"github.com/crosleyzack/wndr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/styles"
 )
 
 // inspired by https://github.com/savannahostrowski/tree-bubble/blob/main/tree.go

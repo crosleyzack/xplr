@@ -1,4 +1,4 @@
-module github.com/crosleyzack/xplr
+module github.com/crosleyzack/wndr
 
 go 1.25.6
 

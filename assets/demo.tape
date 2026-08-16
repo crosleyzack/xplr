@@ -1,4 +1,4 @@
-# NOTE: use `nix develop .` to ensure you are using the latest xplr code for demo
+# NOTE: use `nix develop .` to ensure you are using the latest wndr code for demo
 Output demo.gif
 
 Set FontSize 20
@@ -7,7 +7,7 @@ Set Height 600
 Set TypingSpeed 0.2
 Set Padding 1
 
-Type@50ms "curl https://pokeapi.co/api/v2/pokemon/155 | xplr"
+Type@50ms "curl https://pokeapi.co/api/v2/pokemon/155 | wndr"
 Enter
 Sleep 0.5s
 Down

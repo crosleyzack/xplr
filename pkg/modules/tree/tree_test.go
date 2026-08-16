@@ -3,9 +3,9 @@ package tree
 import (
 	"testing"
 
-	"github.com/crosleyzack/xplr/pkg/keys"
-	"github.com/crosleyzack/xplr/pkg/nodes"
-	"github.com/crosleyzack/xplr/pkg/styles"
+	"github.com/crosleyzack/wndr/pkg/keys"
+	"github.com/crosleyzack/wndr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/styles"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func TestDefaultFormat(t *testing.T) {
 	assert.Equal(t, "❭ ", f.ExpandableShape)
 	assert.Equal(t, "╰─", f.ExpandedShape)
 	assert.Equal(t, 2, f.SpacesPerLayer)
-	assert.Equal(t, 4, f.SpacesAfterKey)
+	assert.Equal(t, 8, f.SpacesAfterKey)
 	assert.False(t, f.HideSummaryWhenExpanded)
 }
 

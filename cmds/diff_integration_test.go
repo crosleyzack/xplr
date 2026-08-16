@@ -11,7 +11,7 @@ import (
 )
 
 // TestDiffGolden is an integration test mirroring diff.tape: it diffs the three
-// pokemon fixtures (_cynd/_quil/_typh) through the real xplr diff command and
+// pokemon fixtures (_cynd/_quil/_typh) through the real wndr diff command and
 // verifies the emitted JSON matches golden.json byte for byte. Any behavioral
 // change to parsing, diffing, or rendering that alters the output will fail
 // here, prompting a regenerated golden file in testdata/.

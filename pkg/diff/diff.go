@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/crosleyzack/xplr/pkg/nodes"
+	"github.com/crosleyzack/wndr/pkg/nodes"
 	"github.com/google/uuid"
 )
 
