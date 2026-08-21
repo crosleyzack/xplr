@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-slim
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.25
+          go-version-file: go.mod
       - name: gofmt
         run: |
           OUTPUT=$(gofmt -l -s .)
@@ -27,11 +27,28 @@ jobs:
   go-tests:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: 1.25
+          go-version-file: go.mod
       - name: Build
         run: go build -v ./...
       - name: Test
         run: go test -v ./...
+
+  go-security:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+      - name: gosec
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          gosec -exclude-generated -severity medium ./...
