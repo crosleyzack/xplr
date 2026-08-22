@@ -80,6 +80,7 @@ func gatherInputs(args, files []string, stdin *os.File) ([][]byte, error) {
 		if f == "" {
 			continue
 		}
+		// #nosec G304 -- arbitrary paths are intended behavior of a local CLI.
 		b, err := os.ReadFile(f)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read file %s: %w", f, err)
